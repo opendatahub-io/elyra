@@ -23,6 +23,7 @@ import {
   FieldTemplateProps,
   RegistryFieldsType,
   RegistryWidgetsType,
+  RJSFValidationError,
   UiSchema
 } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
@@ -45,9 +46,9 @@ interface IFormEditorProps {
   schema: GenericObjectType;
 
   /**
-   * Handler to update form data / error state in parent component.
+   * Handler to update form data in parent component.
    */
-  onChange: (formData: GenericObjectType, invalid: boolean) => void;
+  onChange: (formData: GenericObjectType) => void;
 
   /**
    * Editor services to create new editors in code fields.
@@ -78,6 +79,19 @@ interface IFormEditorProps {
    * All existing languages to give as options.
    */
   languageOptions?: string[];
+}
+
+export type FormValidationState =
+  | {
+      isValid: true;
+    }
+  | {
+      isValid: false;
+      errors: RJSFValidationError[];
+    };
+
+export interface IFormEditorRef {
+  validateForm: (data: GenericObjectType) => FormValidationState;
 }
 
 /**
@@ -146,17 +160,24 @@ const CustomFieldTemplate: React.FC<FieldTemplateProps> = (props) => {
  * Creates a uiSchema from given uihints and passes relevant information
  * to the custom renderers.
  */
-export const FormEditor: React.FC<IFormEditorProps> = ({
-  schema,
-  onChange,
-  editorServices,
-  componentRegistry,
-  translator,
-  originalData,
-  allTags,
-  languageOptions
-}) => {
+const RefForwardingFormEditor: React.ForwardRefRenderFunction<
+  IFormEditorRef,
+  IFormEditorProps
+> = (
+  {
+    schema,
+    onChange,
+    editorServices,
+    componentRegistry,
+    translator,
+    originalData,
+    allTags,
+    languageOptions
+  },
+  forwardedRef
+) => {
   const [formData, setFormData] = React.useState(originalData ?? {});
+  const [liveValidateEnabled, setLiveValidateEnabled] = React.useState(false);
 
   /**
    * Generate the rjsf uiSchema from uihints in the elyra metadata schema.
@@ -186,6 +207,19 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
       .map(([key, value]) => [key, value.widgetRenderer!])
   );
 
+  React.useImperativeHandle(
+    forwardedRef,
+    (): IFormEditorRef => ({
+      validateForm: (data) => {
+        setLiveValidateEnabled(true);
+        const result = validator.validateFormData(data, schema);
+        return result.errors.length === 0
+          ? { isValid: true }
+          : { isValid: false, errors: result.errors };
+      }
+    })
+  );
+
   return (
     <Form
       schema={schema}
@@ -207,9 +241,9 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
       uiSchema={uiSchema}
       onChange={(e): void => {
         setFormData(e.formData);
-        onChange(e.formData, e.errors.length > 0 || false);
+        onChange(e.formData);
       }}
-      liveValidate={true}
+      liveValidate={liveValidateEnabled}
       noHtml5Validate={
         /** noHtml5Validate is set to true to prevent the html validation from moving the focus when the live validate is called. */
         true
@@ -217,3 +251,5 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     />
   );
 };
+
+export const FormEditor = React.forwardRef(RefForwardingFormEditor);

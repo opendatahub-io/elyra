@@ -18,6 +18,7 @@ import { ISchemaResource, MetadataService } from '@elyra/services';
 import {
   RequestErrors,
   FormEditor,
+  IFormEditorRef,
   GenericObjectType
 } from '@elyra/ui-components';
 
@@ -81,7 +82,9 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
   getDefaultChoices,
   titleContext
 }: IMetadataEditorComponentProps) => {
-  const [invalidForm, setInvalidForm] = React.useState(name === undefined);
+  const formRef = React.useRef<IFormEditorRef>(null);
+  const [isSubmitted, setSubmitted] = React.useState(false);
+  const [invalidForm, setInvalidForm] = React.useState(false);
 
   const schema = schemaTop.properties?.metadata;
 
@@ -89,11 +92,20 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
   const displayName = initialMetadata?.['_noCategory']?.['display_name'];
   const referenceURL = schemaTop.uihints?.reference_url;
 
+  const isFormDataValid = (data: GenericObjectType) => {
+    const state = formRef.current!.validateForm(data);
+    return state.isValid;
+  };
+
   /**
    * Saves metadata through either put or post request.
    */
   const saveMetadata = () => {
-    if (invalidForm) {
+    const isValid = isFormDataValid(metadata);
+    setInvalidForm(!isValid);
+    setSubmitted(true);
+
+    if (!isValid) {
       return;
     }
 
@@ -173,10 +185,13 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
         ) : null}
       </p>
       <FormEditor
+        ref={formRef}
         schema={schema as GenericObjectType}
-        onChange={(formData: GenericObjectType, invalid: boolean): void => {
+        onChange={(formData: GenericObjectType): void => {
           setMetadata(formData);
-          setInvalidForm(invalid);
+          if (isSubmitted) {
+            setInvalidForm(!isFormDataValid(formData));
+          }
           setDirty(true);
         }}
         componentRegistry={componentRegistry}
@@ -199,13 +214,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
         ) : (
           <div />
         )}
-        <button
-          onClick={(): void => {
-            saveMetadata();
-          }}
-        >
-          {translator.__('Save & Close')}
-        </button>
+        <button onClick={saveMetadata}>{translator.__('Save & Close')}</button>
       </div>
     </div>
   );
