@@ -83,5 +83,9 @@
     "typedoc-plugin-mdn-links": "^3.0.3",
     "typescript": "~5.1.6",
     "webpack": "^5.76.1"
+  },
+  "engines": {
+    "node": "^22.0.0",
+    "yarn": "3.5.0"
   }
 }
