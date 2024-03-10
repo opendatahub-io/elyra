@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+import codeCoverage from '@cypress/code-coverage/task';
+
 import { register } from './../utils/snapshots/plugin';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workaround for snapshot plugin
 export default (on: any, config: any): void => {
   register(on, config);
+  codeCoverage(on, config);
+  return config;
 };

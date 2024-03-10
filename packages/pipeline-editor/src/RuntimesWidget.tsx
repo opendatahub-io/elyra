@@ -83,8 +83,8 @@ class RuntimesDisplay extends MetadataDisplay<IRuntimesDisplayProps> {
       metadata.metadata.cos_endpoint as string
     );
 
-    let githubRepoElement = null;
-    let metadata_props = null;
+    let githubRepoElement: JSX.Element | null = null;
+    let metadata_props: GenericObjectType | null = null;
 
     for (const schema of this.props.schemas ?? []) {
       if (schema.name === metadata.schema_name) {
