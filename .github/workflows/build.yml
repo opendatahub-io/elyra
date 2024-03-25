@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-name: Elyra Tests
+name: Elyra CI
 on:
   push: # all branches
   pull_request: # all branches
@@ -26,6 +26,8 @@ env:
   NODE_VERSION: 20.11.0
   YARN_VERSION: 3.5.0
   PYTHON_VERSION: 3.11
+  QUAY_WORKBENCH_IMAGES_REPOSITORY: 'opendatahub/workbench-images'
+  QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV: 'jupyter-trustyai-ubi9-python-3.11-20241,cuda-jupyter-tensorflow-ubi9-python-3.11-20241'
 
 jobs:
   prepare-yarn-cache:
@@ -230,8 +232,10 @@ jobs:
       - name: Validate runtime images
         run: make REMOVE_RUNTIME_IMAGE=1 validate-runtime-images
 
-  upload-artifacts:
-    name: Upload Artifacts
+  publish-artifacts:
+    permissions:
+      packages: write
+    name: Publish Artifacts
     needs: prepare-yarn-cache
     runs-on: ubuntu-latest
     steps:
@@ -254,10 +258,71 @@ jobs:
           corepack prepare yarn@${{ env.YARN_VERSION }} --activate
           yarn set version ${{ env.YARN_VERSION }}
           yarn --version
+      - name: Check whether to build container images
+        id: should-build-images
+        run: |
+          echo "result=$([[ '${{ github.event_name }}' != 'pull_request' || '${{ github.event.pull_request.head.repo.full_name }}' == '${{ github.repository }}' ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+      - name: Free up additional disk space
+        if: steps.should-build-images.outputs.result == 'true'
+        run: |
+          ./.github/workflows/scripts/free_gha_space.sh
       - name: Build
         run: |
           make install-prod
-      - name: Upload artifacts
+      - name: Login to GitHub Container Registry
+        if: steps.should-build-images.outputs.result == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build notebook images
+        if: steps.should-build-images.outputs.result == 'true'
+        id: build-notebook-images
+        run: |
+          TAG_SUFFIX=$([ -n "${{ github.event.pull_request.number }}" ] && echo "-pr-${{ github.event.pull_request.number }}" || echo "-sha-$(echo "${{ github.sha }}" | cut -c1-8)")
+          echo "Tag suffix: $TAG_SUFFIX"
+
+          WHL_FILE_PATH=$(ls dist/*.whl | head -n 1)
+          WHL_FILE_NAME=$(basename $WHL_FILE_PATH)
+          echo "Wheel file: $WHL_FILE_PATH"
+
+          URLS=""
+          for tag_prefix in $(echo "${{ env.QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV }}" | tr ',' '\n'); do
+            LATEST_TAG=$(curl -s "https://quay.io/api/v1/repository/${{ env.QUAY_WORKBENCH_IMAGES_REPOSITORY}}/tag/?onlyActiveTags=true" | \
+              jq -r ".tags | map(select(.name | startswith(\"${tag_prefix}\"))) | .[].name" | \
+              sort -r | head -n 1)
+            echo "Latest tag: $LATEST_TAG"
+
+            CONTAINER_IMAGE=ghcr.io/${{ github.repository }}/workbench-images:${LATEST_TAG}${TAG_SUFFIX}
+            echo "Build container image: $CONTAINER_IMAGE"
+
+            docker build -t ${CONTAINER_IMAGE} -f - . <<EOF
+            FROM quay.io/${{ env.QUAY_WORKBENCH_IMAGES_REPOSITORY}}:${LATEST_TAG}
+            COPY $WHL_FILE_PATH /tmp/
+            RUN pip uninstall -y odh-elyra \
+              && pip install /tmp/$WHL_FILE_NAME \
+              && jupyter labextension list
+          EOF
+
+            [ -z "${URLS}" ] && URLS="${CONTAINER_IMAGE}" || URLS="${URLS},${CONTAINER_IMAGE}"
+
+            echo "Publish image to registry"
+            docker push ${CONTAINER_IMAGE}
+
+            echo "Show container image information"
+            docker images
+
+            echo "Clean up resources"
+            docker system prune -af
+
+            echo "urls=${URLS}" >> "$GITHUB_OUTPUT"
+          done
+      - name: Print container image URLs
+        if: steps.should-build-images.outputs.result == 'true'
+        run: |
+          echo ${{ steps.build-notebook-images.outputs.urls }} | tr ',' '\n'
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: elyra_build_artifacts
