@@ -1,4 +1,4 @@
-# Copied from: https://github.com/elyra-ai/elyra/blob/main/elyra/kfp/bootstrapper.py
+#
 #
 # Copyright 2018-2023 Elyra Authors
 #
