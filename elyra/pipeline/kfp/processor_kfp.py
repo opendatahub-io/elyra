@@ -421,7 +421,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
             self.log_pipeline_info(
                 pipeline_name,
-                f"pipeline submitted: {public_api_endpoint}/{run.run_id}",
+                f"pipeline submitted: {public_api_endpoint}/{experiment.experiment_id}/runs/{run.run_id}",
                 duration=time.time() - t0,
             )
 
@@ -437,7 +437,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
         return KfpPipelineProcessorResponse(
             run_id=run.run_id,
-            run_url=f"{public_api_endpoint}/{run.run_id}",
+            run_url=f"{public_api_endpoint}/{experiment.experiment_id}/runs/{run.run_id}",
             object_storage_url=object_storage_url,
             object_storage_path=object_storage_path,
         )
