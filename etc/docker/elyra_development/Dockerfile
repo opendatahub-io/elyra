@@ -10,10 +10,13 @@ RUN echo ">> Building for TARGETARCH=${TARGETARCH}, NODE_VERSION=${NODE_VERSION}
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-RUN apt-get update --fix-missing && \
-    apt-get install -y make wget bzip2 ca-certificates curl git && \
-    apt-get clean && \
+RUN <<EOF
+    apt-get update --fix-missing 
+    apt-get install -y make wget bzip2 ca-certificates curl git 
+    apt-get clean 
     rm -rf /var/lib/apt/lists/*
+    apt-get install -y build-essential
+EOF
 
 COPY requirements.yml requirements.yml
 
