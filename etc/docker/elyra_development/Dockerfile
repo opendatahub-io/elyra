@@ -15,7 +15,6 @@ RUN <<EOF
     apt-get install -y make wget bzip2 ca-certificates curl git 
     apt-get clean 
     rm -rf /var/lib/apt/lists/*
-    apt-get install -y build-essential
 EOF
 
 COPY requirements.yml requirements.yml
@@ -39,7 +38,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 # install yarn
 RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && apt-get install yarn
+    apt-get update && apt-get install yarn && apt-get install -y build-essential
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /usr/bin/tini
 RUN chmod +x /usr/bin/tini

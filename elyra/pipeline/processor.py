@@ -431,8 +431,8 @@ class RuntimePipelineProcessor(PipelineProcessor):
             raise ex from ex
 
     def _verify_cos_connectivity(self, runtime_configuration) -> None:
-        if not runtime_configuration.metadata['cos_endpoint'].startswith("https://"):
-            runtime_configuration.metadata['cos_endpoint'] = "https://" + runtime_configuration.metadata['cos_endpoint']
+        if not runtime_configuration.metadata["cos_endpoint"].startswith("https://"):
+            runtime_configuration.metadata["cos_endpoint"] = "https://" + runtime_configuration.metadata["cos_endpoint"]
         self.log.debug(
             "Verifying cloud storage connectivity using runtime configuration "
             f"'{runtime_configuration.display_name}'."

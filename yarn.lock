@@ -3339,7 +3339,7 @@
   dependencies:
     "@lumino/algorithm" "^1.9.2"
 
-"@lumino/widgets@^1.19.0", "@lumino/widgets@^1.30.1", "@lumino/widgets@^1.31.1", "@lumino/widgets@^1.33.0", "@lumino/widgets@^1.34.0":
+"@lumino/widgets@^1.19.0", "@lumino/widgets@^1.30.1", "@lumino/widgets@^1.33.0", "@lumino/widgets@^1.34.0":
   version "1.34.0"
   resolved "https://registry.yarnpkg.com/@lumino/widgets/-/widgets-1.34.0.tgz#0cc9ae568b7c129247e240d9b277ead324d4352f"
   integrity sha512-HvvZ/UL1mcbvZ2IZrIA5p+YVSjTzQYrkXwPkFDPs6TgSgj5VmBm8Y13B7gS+/p9634OR5WNiWVO3KNALVHRXcw==

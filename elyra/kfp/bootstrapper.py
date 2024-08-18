@@ -483,16 +483,16 @@ class PythonFileOp(FileOpBase):
             run_args = ["python3", python_script]
             if self.parameter_pass_method == "env":
                 self.set_parameters_in_env()
-            
+
             logger.info("----------------------Python logs start----------------------")
             # Removing support for the s3 storage of python script logs
             # with open(python_script_output, "w") as log_file:
             #     process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-            for line in iter(process.stdout.readline, b''):
+            for line in iter(process.stdout.readline, b""):
                 sys.stdout.write(line.decode())
-                
+
             process.stdout.close()
             return_code = process.wait()
             logger.info("----------------------Python logs ends----------------------")
@@ -535,9 +535,9 @@ class RFileOp(FileOpBase):
             #     process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-            for line in iter(process.stdout.readline, b''):
+            for line in iter(process.stdout.readline, b""):
                 sys.stdout.write(line.decode())
-                
+
             process.stdout.close()
             return_code = process.wait()
             logger.info("----------------------R script logs ends----------------------")
