@@ -40,8 +40,16 @@ RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr
     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     apt-get update && apt-get install yarn && apt-get install -y build-essential
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /usr/bin/tini
-RUN chmod +x /usr/bin/tini
+# add tini
+RUN <<EOF 
+    if [ "${TARGETARCH}" != "x86_64" ]; then 
+        TINI_FILE=tini-${TARGETARCH}
+    else
+        TINI_FILE=tini 
+    fi
+    wget --quiet https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_FILE} -O /usr/bin/tini   
+    chmod +x /usr/bin/tini
+EOF
 
 RUN mkdir -p /dev/elyra
 
