@@ -19,9 +19,14 @@ EOF
 
 COPY requirements.yml requirements.yml
 
-RUN <<EOF
-    export CONDA_ARCH=$(uname -m) 
-    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-${CONDA_ARCH}.sh -O ~/miniconda.sh 
+RUN /bin/bash <<EOF
+    if [ "${TARGETARCH}" == "arm64" ]; then 
+        CONDA_ARCH="aarch64"
+    else
+        CONDA_ARCH=${TARGETARCH:-"x86_64"}
+    fi
+    # CONDA_ARCH expansion needs to be escaped to avoid docker expanding the variable before calling the shell
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh 
     /bin/bash ~/miniconda.sh -b -p /opt/conda 
     rm ~/miniconda.sh 
     /opt/conda/bin/conda clean -tipy 
@@ -47,7 +52,8 @@ RUN <<EOF
     else
         TINI_FILE=tini 
     fi
-    wget --quiet https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_FILE} -O /usr/bin/tini   
+    # TINI_FILE expansion needs to be escaped to avoid docker expanding the variable before calling the shell
+    wget --quiet https://github.com/krallin/tini/releases/download/${TINI_VERSION}/\${TINI_FILE} -O /usr/bin/tini   
     chmod +x /usr/bin/tini
 EOF
 
