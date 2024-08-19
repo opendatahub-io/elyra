@@ -1058,7 +1058,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         account whether the container will run in a CRI-O environment.
         """
 
-        # NOTE: The default organization and default branch are meant for the opendatahub-io/Data-science-pipelines v2 use case
+        # NOTE: The default organization and default branch are
+        # meant for the opendatahub-io/Data-science-pipelines v2 use case
         # and should not be opened as PR against upstream Elyra
         elyra_github_org = os.getenv("ELYRA_GITHUB_ORG", "opendatahub-io")
         elyra_github_branch = os.getenv("ELYRA_GITHUB_BRANCH", "dspv2" if "dev" in __version__ else __version__)

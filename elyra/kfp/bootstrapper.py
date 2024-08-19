@@ -472,7 +472,7 @@ class PythonFileOp(FileOpBase):
         """Execute the Python script and upload results to object storage"""
         python_script = os.path.basename(self.filepath)
         python_script_name = python_script.replace(".py", "")
-        # python_script_output = f"{python_script_name}.log"
+        python_script_output = f"{python_script_name}.log"
 
         try:
             OpUtil.log_operation_info(
@@ -519,7 +519,7 @@ class RFileOp(FileOpBase):
         """Execute the R script and upload results to object storage"""
         r_script = os.path.basename(self.filepath)
         r_script_name = r_script.replace(".r", "")
-        # r_script_output = f"{r_script_name}.log"
+        r_script_output = f"{r_script_name}.log"
 
         try:
             OpUtil.log_operation_info(f"executing R script using 'Rscript {r_script}' to '{r_script_output}'")
