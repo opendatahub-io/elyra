@@ -26,6 +26,7 @@ RUN /bin/bash <<EOF
         CONDA_ARCH=${TARGETARCH:-"x86_64"}
     fi
     # CONDA_ARCH expansion needs to be escaped to avoid docker expanding the variable before calling the shell
+    echo "wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh"
     wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh 
     /bin/bash ~/miniconda.sh -b -p /opt/conda 
     rm ~/miniconda.sh 
@@ -46,13 +47,14 @@ RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr
     apt-get update && apt-get install yarn && apt-get install -y build-essential
 
 # add tini
-RUN <<EOF 
-    if [ "${TARGETARCH}" != "x86_64" ]; then 
-        TINI_FILE=tini-${TARGETARCH}
+RUN /bin/bash <<EOF 
+    if [ "${TARGETARCH}" == "x86_64" ]; then 
+        TINI_FILE=tini
     else
-        TINI_FILE=tini 
+        TINI_FILE=tini-${TARGETARCH} 
     fi
     # TINI_FILE expansion needs to be escaped to avoid docker expanding the variable before calling the shell
+    echo "wget --quiet https://github.com/krallin/tini/releases/download/${TINI_VERSION}/\${TINI_FILE} -O /usr/bin/tini"
     wget --quiet https://github.com/krallin/tini/releases/download/${TINI_VERSION}/\${TINI_FILE} -O /usr/bin/tini   
     chmod +x /usr/bin/tini
 EOF
