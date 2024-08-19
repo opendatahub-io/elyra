@@ -230,7 +230,7 @@ class KFPAuthenticator:
         """
 
         kf_url = urlsplit(api_endpoint)._replace(path="").geturl()
-        kf_pipelines_ssl_sa_cert = os.getenv("PIPELINES_SSL_SA_CERTS", None)
+        kf_pipelines_ssl_sa_cert = os.getenv("KF_PIPELINES_SSL_SA_CERTS", None)
 
         # return data structure for successful requests
         auth_info = {
