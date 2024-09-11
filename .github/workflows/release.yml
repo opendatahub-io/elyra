@@ -40,10 +40,11 @@ jobs:
         run: |
           set -o pipefail
           LATEST_TAG=$(git describe --tags --match="v*")
-          if [[ "$LATEST_TAG" =~ $(cat ./elyra/_version.py | grep "__version__" | cut -d'"' -f 2) ]]; then
+          if [[ "$LATEST_TAG" != $(cat ./elyra/_version.py | grep "__version__" | cut -d'"' -f 2) ]]; then
             echo "::error title='$LATEST_TAG tag does not match project version'::"
             exit 1
           fi
+          echo "::info title='$LATEST_TAG tag is ready to be released to PyPI' ::"
       - name: Build package
         run: |
           make install
