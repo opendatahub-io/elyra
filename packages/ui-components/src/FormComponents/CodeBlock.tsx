@@ -27,8 +27,9 @@ export const CodeBlock: React.FC<FieldProps> = (props: FieldProps) => {
   const servicesRef = React.useRef(formContext.editorServices);
 
   React.useEffect(() => {
-    const handleChange = (args: any): void => {
-      onChange(args.text.split('\n'));
+    const handleChange = (): void => {
+      const source = editorRef.current?.model.sharedModel.getSource();
+      onChange(source ? source.split('\n') : undefined);
     };
 
     if (codeBlockRef.current !== null) {
