@@ -188,9 +188,9 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
 
         /*
           interface CodeCellCreatorOption {
-          model: ICodeCellModel | undefined; 
-          rendermime: RenderMimeRegistry; 
-          contentFactory: any; 
+          model: ICodeCellModel | undefined;
+          rendermime: RenderMimeRegistry;
+          contentFactory: any;
           cell_type: string;
         }
         */
@@ -593,8 +593,6 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
   createPreviewEditors = (): void => {
     const editorFactory =
       this.props.editorServices.factoryService.newInlineEditor;
-    const getMimeTypeByLanguage =
-      this.props.editorServices.mimeTypeService.getMimeTypeByLanguage;
     this.props.metadata.map((codeSnippet: IMetadata) => {
       if (codeSnippet.name in this.editors) {
         // Make sure code is up to date
@@ -608,16 +606,17 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
           return;
         }
 
+        const mimeType =
+          this.props.editorServices.mimeTypeService.getMimeTypeByLanguage({
+            value: codeSnippet.metadata.code.join('\n'),
+            name: codeSnippet.metadata.language,
+            codemirror_mode: codeSnippet.metadata.language
+          });
+
         this.editors[codeSnippet.name] = editorFactory({
           config: { readOnly: true },
           host: snippetElement,
-          model: new CodeEditor.Model({
-            mimeType: getMimeTypeByLanguage({
-              value: codeSnippet.metadata.code.join('\n'),
-              name: codeSnippet.metadata.language,
-              codemirror_mode: codeSnippet.metadata.language
-            })
-          })
+          model: new CodeEditor.Model({ mimeType })
         });
       }
     });
