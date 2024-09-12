@@ -17,23 +17,11 @@
 import { IEditorServices } from '@jupyterlab/codeeditor';
 import { TranslationBundle } from '@jupyterlab/translation';
 import { IFormRendererRegistry } from '@jupyterlab/ui-components';
-
-import Form, { IChangeEvent } from '@rjsf/core';
-//import Field from '@rjsf/core';
-import {
+import Form, {
   ArrayFieldTemplateProps,
-  FieldTemplateProps
-  //RegistryFieldsType,
-} from '@rjsf/utils';
-/*
-import {
-  ErrorListProps,
-  ObjectFieldTemplateProps,
-  RJSFSchema,
-} from '@rjsf/utils';
-*/
-import validator from '@rjsf/validator-ajv8';
-
+  FieldTemplateProps,
+  IChangeEvent
+} from '@rjsf/core';
 import * as React from 'react';
 
 /**
@@ -151,7 +139,7 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
   schema,
   onChange,
   editorServices,
-  // componentRegistry,
+  componentRegistry,
   translator,
   originalData,
   allTags,
@@ -174,10 +162,19 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     }
   }
 
-  const templates: any = {
-    ArrayFieldTemplate: CustomArrayTemplate,
-    FieldTemplate: CustomFieldTemplate
-  };
+  const fieldRenderers = Object.fromEntries(
+    Object.entries(componentRegistry?.renderers ?? {}).map(([key, value]) => [
+      key,
+      value.fieldRenderer
+    ])
+  );
+
+  const widgetRenderers = Object.fromEntries(
+    Object.entries(componentRegistry?.renderers ?? {}).map(([key, value]) => [
+      key,
+      value.widgetRenderer
+    ])
+  );
 
   return (
     <Form
@@ -190,10 +187,10 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
         languageOptions: languageOptions,
         trans: translator
       }}
-      // fields={componentRegistry}
-      // FieldTemplate={(props : any) => <CustomFieldTemplate {...props} fields={props.registry.fields} />}
-      validator={validator}
-      fields={templates}
+      widgets={widgetRenderers}
+      fields={fieldRenderers}
+      ArrayFieldTemplate={CustomArrayTemplate}
+      FieldTemplate={CustomFieldTemplate}
       uiSchema={uiSchema}
       onChange={(e: IChangeEvent<any>): void => {
         setFormData(e.formData);

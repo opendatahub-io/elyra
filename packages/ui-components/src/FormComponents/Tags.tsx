@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import { Dialog, showDialog } from '@jupyterlab/apputils';
-import { checkIcon, addIcon } from '@jupyterlab/ui-components';
+import { addIcon, checkIcon } from '@jupyterlab/ui-components';
+import { FieldProps } from '@rjsf/utils';
 
 import React from 'react';
 
@@ -204,21 +205,10 @@ export const Tags: React.FC<ITagProps> = ({
   );
 };
 
-interface ITagsFieldProps {
-  errorSchema: Record<string, any>;
-  formData?: string[];
-  formContext: {
-    allTags?: string[];
-    updateAllTags?: (tags: string[]) => void;
-  };
-  onChange: (selectedTags: string[]) => void;
-}
-
-export const TagsField: React.FC<ITagsFieldProps> = (
-  props: ITagsFieldProps
-) => {
+export const TagsField: React.FC<FieldProps> = (props: FieldProps) => {
   const errors = [];
-  if (Object.keys(props.errorSchema).length > 0) {
+  const errorSchema = props.errorSchema ?? {};
+  if (Object.keys(errorSchema).length > 0) {
     for (const i in props.errorSchema) {
       for (const err of (props.errorSchema[i] as any)['__errors']) {
         errors.push(<li className="text-danger">{err}</li>);
@@ -235,7 +225,7 @@ export const TagsField: React.FC<ITagsFieldProps> = (
           props.formContext.updateAllTags?.(allTags);
         }}
       />
-      {Object.keys(props.errorSchema).length > 0 ? (
+      {Object.keys(errorSchema).length > 0 ? (
         <ul className="error-detail bs-callout bs-callout-info">{errors}</ul>
       ) : undefined}
     </div>

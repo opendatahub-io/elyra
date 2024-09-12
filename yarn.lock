@@ -3441,8 +3441,7 @@ __metadata:
     "@jupyterlab/apputils": ^4.2.5
     "@jupyterlab/builder": ^4.2.5
     "@jupyterlab/ui-components": ^4.2.5
-    "@rjsf/core": ^5.1.0
-    "@rjsf/validator-ajv8": ^5.17.1
+    "@rjsf/core": ^3.1.0
     react: ^18.2.0
     react-dom: ^18.0.9
     react-json-tree: ^0.11.2
@@ -6263,6 +6262,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rjsf/core@npm:^3.1.0":
+  version: 3.2.1
+  resolution: "@rjsf/core@npm:3.2.1"
+  dependencies:
+    "@types/json-schema": ^7.0.7
+    ajv: ^6.7.0
+    core-js-pure: ^3.6.5
+    json-schema-merge-allof: ^0.6.0
+    jsonpointer: ^5.0.0
+    lodash: ^4.17.15
+    nanoid: ^3.1.23
+    prop-types: ^15.7.2
+    react-is: ^16.9.0
+  peerDependencies:
+    react: ">=16"
+  checksum: 2142d4a31229ea242b79aca4ed93e2fe89e75f15ce93111457c3017d3ab295cae8f53e4dd870c619afa571959d00f46b3c19085c6a336f522c891fc07ecc46f1
+  languageName: node
+  linkType: hard
+
 "@rjsf/core@npm:^4.2.3":
   version: 4.2.3
   resolution: "@rjsf/core@npm:4.2.3"
@@ -6283,7 +6301,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rjsf/core@npm:^5.1.0, @rjsf/core@npm:^5.13.4":
+"@rjsf/core@npm:^5.13.4":
   version: 5.20.1
   resolution: "@rjsf/core@npm:5.20.1"
   dependencies:
@@ -6339,20 +6357,6 @@ __metadata:
   peerDependencies:
     "@rjsf/utils": ^5.0.0-beta.1
   checksum: e32e3e4b87e1bbe939edc40f4100012a78200598d2eae607806b39c1f7a792bf255bc59db315a6e1eb68a5d8470be7fecb8b16fae7a54454ca4c2aec1fbab627
-  languageName: node
-  linkType: hard
-
-"@rjsf/validator-ajv8@npm:^5.17.1":
-  version: 5.20.1
-  resolution: "@rjsf/validator-ajv8@npm:5.20.1"
-  dependencies:
-    ajv: ^8.12.0
-    ajv-formats: ^2.1.1
-    lodash: ^4.17.21
-    lodash-es: ^4.17.21
-  peerDependencies:
-    "@rjsf/utils": ^5.20.x
-  checksum: b6d9833335903465fa79cc808e4ad564d6f09adb23e728d3a3d0d309202b45846494ea1bed2bbc32b07d8583d37c9ce8fe9772ba48aa77c0660829162517c4d2
   languageName: node
   linkType: hard
 
@@ -23462,7 +23466,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.13.1, react-is@npm:^16.7.0":
+"react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.9.0":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f

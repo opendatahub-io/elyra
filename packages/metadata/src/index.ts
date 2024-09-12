@@ -18,10 +18,11 @@ import { MetadataWidget, MetadataEditorWidget } from '@elyra/metadata-common';
 import { MetadataService } from '@elyra/services';
 
 import {
-  DropDown,
   RequestErrors,
+  PasswordField,
   CodeBlock,
-  PasswordField
+  TagsField,
+  DropDown
 } from '@elyra/ui-components';
 import {
   JupyterFrontEnd,
@@ -42,6 +43,7 @@ import { Widget } from '@lumino/widgets';
 
 const METADATA_EDITOR_ID = 'elyra-metadata-editor';
 const METADATA_WIDGET_ID = 'elyra-metadata';
+const METADATA_EXTENSION_ID = '@elyra/metadata-extension';
 
 const commandIDs = {
   openMetadata: 'elyra-metadata:open',
@@ -70,22 +72,23 @@ const extension: JupyterFrontEndPlugin<void> = {
     translator: ITranslator
   ) => {
     console.log('Elyra - metadata extension is activated!');
-    // FIXME: These renderers are not working
-    componentRegistry.addRenderer('@elyra/metadata-extension:plugin.code', {
+
+    componentRegistry.addRenderer(`${METADATA_EXTENSION_ID}:plugin.code`, {
       fieldRenderer: (props) => {
         return CodeBlock(props);
       }
     });
-    // componentRegistry.addRenderer(
-    //   '@elyra/metadata-extension:plugin.tags',
-    //   TagsField as unknown as IFormRenderer
-    // );
-    componentRegistry.addRenderer('@elyra/metadata-extension:plugin.dropdown', {
+    componentRegistry.addRenderer(`${METADATA_EXTENSION_ID}:plugin.tags`, {
+      fieldRenderer: (props) => {
+        return TagsField(props);
+      }
+    });
+    componentRegistry.addRenderer(`${METADATA_EXTENSION_ID}:plugin.dropdown`, {
       fieldRenderer: (props) => {
         return DropDown(props);
       }
     });
-    componentRegistry.addRenderer('@elyra/metadata-extension:plugin.password', {
+    componentRegistry.addRenderer(`${METADATA_EXTENSION_ID}:plugin.password`, {
       fieldRenderer: (props) => {
         return PasswordField(props);
       }
