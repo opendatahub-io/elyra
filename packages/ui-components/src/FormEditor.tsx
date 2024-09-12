@@ -17,11 +17,14 @@
 import { IEditorServices } from '@jupyterlab/codeeditor';
 import { TranslationBundle } from '@jupyterlab/translation';
 import { IFormRendererRegistry } from '@jupyterlab/ui-components';
-import Form, {
+import Form from '@rjsf/core';
+import {
   ArrayFieldTemplateProps,
   FieldTemplateProps,
-  IChangeEvent
-} from '@rjsf/core';
+  RegistryFieldsType,
+  RegistryWidgetsType
+} from '@rjsf/utils';
+import validator from '@rjsf/validator-ajv8';
 import * as React from 'react';
 
 /**
@@ -162,18 +165,16 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     }
   }
 
-  const fieldRenderers = Object.fromEntries(
-    Object.entries(componentRegistry?.renderers ?? {}).map(([key, value]) => [
-      key,
-      value.fieldRenderer
-    ])
+  const fieldRenderers: RegistryFieldsType = Object.fromEntries(
+    Object.entries(componentRegistry?.renderers ?? {})
+      .filter(([_, value]) => value.fieldRenderer !== undefined)
+      .map(([key, value]) => [key, value.fieldRenderer!])
   );
 
-  const widgetRenderers = Object.fromEntries(
-    Object.entries(componentRegistry?.renderers ?? {}).map(([key, value]) => [
-      key,
-      value.widgetRenderer
-    ])
+  const widgetRenderers: RegistryWidgetsType = Object.fromEntries(
+    Object.entries(componentRegistry?.renderers ?? {})
+      .filter(([_, value]) => value.widgetRenderer !== undefined)
+      .map(([key, value]) => [key, value.widgetRenderer!])
   );
 
   return (
@@ -187,12 +188,15 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
         languageOptions: languageOptions,
         trans: translator
       }}
+      validator={validator}
       widgets={widgetRenderers}
       fields={fieldRenderers}
-      ArrayFieldTemplate={CustomArrayTemplate}
-      FieldTemplate={CustomFieldTemplate}
+      templates={{
+        FieldTemplate: CustomFieldTemplate,
+        ArrayFieldTemplate: CustomArrayTemplate
+      }}
       uiSchema={uiSchema}
-      onChange={(e: IChangeEvent<any>): void => {
+      onChange={(e): void => {
         setFormData(e.formData);
         onChange(e.formData, e.errors.length > 0 || false);
       }}
