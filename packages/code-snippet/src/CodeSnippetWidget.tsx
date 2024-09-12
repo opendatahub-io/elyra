@@ -594,11 +594,11 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
     const editorFactory =
       this.props.editorServices.factoryService.newInlineEditor;
     this.props.metadata.map((codeSnippet: IMetadata) => {
+      const content = codeSnippet.metadata.code.join('\n');
+
       if (codeSnippet.name in this.editors) {
         // Make sure code is up to date
-        this.editors[codeSnippet.name].model.selections.has(
-          codeSnippet.metadata.code.join('\n')
-        );
+        this.editors[codeSnippet.name].model.sharedModel.setSource(content);
       } else {
         // Add new snippets
         const snippetElement = document.getElementById(codeSnippet.name);
@@ -613,11 +613,13 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
             codemirror_mode: codeSnippet.metadata.language
           });
 
-        this.editors[codeSnippet.name] = editorFactory({
+        const newEditor = editorFactory({
           config: { readOnly: true },
           host: snippetElement,
           model: new CodeEditor.Model({ mimeType })
         });
+        newEditor.model.sharedModel.setSource(content);
+        this.editors[codeSnippet.name] = newEditor;
       }
     });
   };
