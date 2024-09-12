@@ -396,10 +396,7 @@ describe('Pipeline Editor tests', () => {
     cy.findAllByRole('tab', { name: /producer\.ipynb/g }).should('exist');
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should save runtime configuration', () => {
-    cy.createPipeline({ emptyPipeline });
-
+  it('should save runtime configuration', () => {
     // Create kfp runtime configuration
     cy.createRuntimeConfig({ type: 'kfp' });
 
@@ -733,8 +730,7 @@ describe('Pipeline Editor tests', () => {
   });
 
   //error dialog tests
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('saving runtime config with missing required fields should error', () => {
+  it('saving runtime config with missing required fields should error', () => {
     cy.createRuntimeConfig({ type: 'invalid' });
     cy.get('.jp-Dialog-header').contains('Error making request');
 
