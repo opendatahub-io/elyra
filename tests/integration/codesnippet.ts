@@ -51,8 +51,7 @@ describe('Code Snippet tests', () => {
     cy.get('@required-warnings').should('have.length', 2);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should create valid code-snippet', () => {
+  it('should create valid code-snippet', () => {
     createValidCodeSnippet(snippetName);
 
     // Metadata editor tab should not be visible
@@ -79,8 +78,7 @@ describe('Code Snippet tests', () => {
     cy.get('button.jp-mod-accept').click();
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should trigger save / submit on pressing enter', () => {
+  it('should trigger save / submit on pressing enter', () => {
     populateCodeSnippetFields(snippetName);
 
     cy.get('.elyra-formEditor-form-display_name').type('{enter}');
@@ -95,8 +93,7 @@ describe('Code Snippet tests', () => {
   });
 
   // Delete snippet
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should delete existing Code Snippet', () => {
+  it('should delete existing Code Snippet', () => {
     createValidCodeSnippet(snippetName);
 
     cy.wait(500);
@@ -107,8 +104,7 @@ describe('Code Snippet tests', () => {
   });
 
   // Duplicate snippet
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should duplicate existing Code Snippet', () => {
+  it('should duplicate existing Code Snippet', () => {
     createValidCodeSnippet(snippetName);
     cy.wait(500);
     let snippetRef = getSnippetByName(snippetName);
@@ -132,8 +128,7 @@ describe('Code Snippet tests', () => {
     deleteSnippet(`${snippetName}-Copy2`);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should have visible action buttons for existing code snippet', () => {
+  it('should have visible action buttons for existing code snippet', () => {
     createValidCodeSnippet(snippetName);
 
     const actionButtons = getActionButtonsElement(snippetName);
@@ -153,8 +148,7 @@ describe('Code Snippet tests', () => {
     });
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should display/hide code snippet content on expand/collapse button', () => {
+  it('should display/hide code snippet content on expand/collapse button', () => {
     createValidCodeSnippet(snippetName);
 
     // Check new code snippet is displayed
@@ -365,9 +359,10 @@ const populateCodeSnippetFields = (
   editSnippetLanguage(snippetName, language ?? 'Python');
 
   // Add snippet code
-  cy.get('.CodeMirror .CodeMirror-scroll:visible').type(
-    'print("Code Snippet Test")'
-  );
+  cy.get('.cm-content[contenteditable="true"]')
+    .first()
+    .click({ force: true })
+    .type('print("Code Snippet Test")', { delay: 100 });
 };
 
 const createValidCodeSnippet = (
