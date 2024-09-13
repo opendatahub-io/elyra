@@ -899,7 +899,7 @@ def enable_and_disable_crio(request):
     indirect=True,
 )
 @pytest.mark.skip(
-    reason="This test is not compatible with KFP v2: The expected assertions cannot be verified in the generated YAML."
+    reason="This test is not compatible with KFP v2 as the generated YAML is ignoring attributes from the source pipeline file"
 )
 def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     monkeypatch, processor: KfpPipelineProcessor, metadata_dependencies: Dict[str, Any], tmpdir
@@ -941,6 +941,8 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     compiled_output_file = Path(tmpdir) / test_pipeline_file.with_suffix(".yaml").name
     compiled_output_file_name = str(compiled_output_file.absolute())
 
+    print(f">>>> compiled_output_file_name: {compiled_output_file_name}")
+
     # generate Python DSL
     pipeline_version = f"{pipeline.name}-0815"
     pipeline_instance_id = f"{pipeline.name}-{datetime.now().strftime('%m%d%H%M%S')}"
@@ -964,55 +966,47 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
 
     # Load compiled output
     with open(compiled_output_file_name) as fh:
-        compiled_spec = yaml.safe_load(fh.read())
+        spec_docs = list(yaml.safe_load_all(fh.read()))
 
-    # There should be two templates, one for the DAG and one for the generic node.
-    # Locate the one for the generic node and inspect its properties.
-    assert len(compiled_spec["spec"]["templates"]) == 2
-    if compiled_spec["spec"]["templates"][0]["name"] == compiled_spec["spec"]["entrypoint"]:
-        node_template = compiled_spec["spec"]["templates"][1]
-    else:
-        node_template = compiled_spec["spec"]["templates"][0]
+    assert len(spec_docs) == 2
+    assert "components" in spec_docs[0]
+    assert "platforms" in spec_docs[1]
 
     #
     # validate data volumes, if applicable
     expected_volume_mounts = op.elyra_props.get(MOUNTED_VOLUMES)
     if len(expected_volume_mounts) > 0:
         # There must be one or more 'volumeMounts' entry and one or more 'volumes' entry
-        assert node_template["container"].get("volumeMounts") is not None, node_template["container"]
-        assert node_template.get("volumes") is not None, compiled_spec["spec"]
+        assert spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"].get("pvcMount") is not None, spec_docs[1]["kubernetes"]
+        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"]["pvcMount"]
 
-        assert len(node_template["container"]["volumeMounts"]) >= len(expected_volume_mounts)
+        assert len(pvc_mounts) >= len(expected_volume_mounts)
         for volume_mount in expected_volume_mounts:
-            for volumemount_entry in node_template["container"]["volumeMounts"]:
+            for volumemount_entry in pvc_mounts:
                 entry_found = False
                 if volumemount_entry["mountPath"] == volume_mount.path:
-                    assert volumemount_entry["name"] == volume_mount.pvc_name
-                    assert volumemount_entry.get("subPath", None) == volume_mount.sub_path
-                    assert volumemount_entry.get("readOnly", None) == volume_mount.read_only
+                    assert volumemount_entry["constant"] == volume_mount.pvc_name
+                    # the following attributes are currently ignored in KFP v2.
+                    # Once they are implemented, the code below needs to be updated accordingly.
+                    # Reference: https://github.com/kubeflow/pipelines/blob/master/kubernetes_platform/proto/kubernetes_executor_config.proto#L84
+                    # 
+                    # assert volumemount_entry.get("subPath", None) == volume_mount.sub_path
+                    # assert volumemount_entry.get("readOnly", False) == volume_mount.read_only
                     entry_found = True
                     break
             assert (
                 entry_found
-            ), f"Cannot find volume mount entry '{volume_mount.path}' in {node_template['container']['volumeMounts']}"
-            for volume_entry in node_template["volumes"]:
-                entry_found = False
-                if volume_entry["name"] == volume_mount.pvc_name:
-                    assert volume_entry["persistentVolumeClaim"]["claimName"] == volume_mount.pvc_name
-                    entry_found = True
-                    break
-            assert (
-                entry_found
-            ), f"Cannot find volume entry '{volume_mount.path}' in {node_template['container']['volumeMounts']}"
+            ), f"Cannot find volume mount entry '{volume_mount.path}' in {pvc_mounts}"
 
     #
     # validate custom shared memory size, if applicable
     custom_shared_mem_size = op.elyra_props.get(KUBERNETES_SHARED_MEM_SIZE)
     if custom_shared_mem_size:
         # There must be one 'volumeMounts' entry and one 'volumes' entry
-        assert node_template["container"].get("volumeMounts") is not None, node_template["container"]
-        assert node_template.get("volumes") is not None, compiled_spec["spec"]
-        for volumemount_entry in node_template["container"]["volumeMounts"]:
+        assert spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"].get("pvcMount") is not None, spec_docs[1]["kubernetes"]
+        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"]["pvcMount"]
+
+        for volumemount_entry in pvc_mounts:
             entry_found = False
             if volumemount_entry["mountPath"] == "/dev/shm":
                 assert volumemount_entry["name"] == "shm"
@@ -1020,20 +1014,7 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
                 break
         assert (
             entry_found
-        ), "Missing volume mount entry for shared memory size in {node_template['container']['volumeMounts']}"
-        for volume_entry in node_template["volumes"]:
-            entry_found = False
-            if volume_entry["name"] == "shm":
-                assert volume_entry["emptyDir"]["medium"] == "Memory"
-                assert (
-                    volume_entry["emptyDir"]["sizeLimit"]
-                    == f"{custom_shared_mem_size.size}{custom_shared_mem_size.units}"
-                )
-                entry_found = True
-                break
-        assert (
-            entry_found
-        ), f"Missing volume entry for shm size '{volume_mount.path}' in {node_template['container']['volumeMounts']}"
+        ), "Missing volume mount entry for shared memory size in {pvc_mounts}"
 
     #
     # validate Kubernetes secrets, if applicable
