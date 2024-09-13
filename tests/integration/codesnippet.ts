@@ -63,8 +63,7 @@ describe('Code Snippet tests', () => {
     getSnippetByName(snippetName);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should fail to create duplicate Code Snippet', () => {
+  it('should fail to create duplicate Code Snippet', () => {
     // create code snippet
     createValidCodeSnippet(snippetName);
 
@@ -206,8 +205,10 @@ describe('Code Snippet tests', () => {
     deleteSnippet(newSnippetName);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should fail to insert a code snippet into unsupported widget', () => {
+  it('should fail to insert a code snippet into unsupported widget', () => {
+    // Give time for the Launcher tab to load
+    cy.wait(2000);
+
     createValidCodeSnippet(snippetName);
 
     // Insert snippet into launcher widget
@@ -219,8 +220,10 @@ describe('Code Snippet tests', () => {
     cy.wait(100);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
-  it.skip('should insert a python code snippet into python editor', () => {
+  it('should insert a python code snippet into python editor', () => {
+    // Give time for the Launcher tab to load
+    cy.wait(2000);
+
     createValidCodeSnippet(snippetName);
 
     // Open blank python file
@@ -232,12 +235,15 @@ describe('Code Snippet tests', () => {
     insert(snippetName);
 
     // Check if editor has the new code
-    cy.get('.CodeMirror:visible');
-    cy.get('span.cm-string').contains(/test/i);
+    cy.get('.cm-editor:visible');
+    cy.get('.cm-editor .cm-content .cm-line').contains(/test/i);
   });
 
   // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
   it.skip('should fail to insert a java code snippet into python editor', () => {
+    // Give time for the Launcher tab to load
+    cy.wait(2000);
+
     createValidCodeSnippet(snippetName, 'Java');
 
     // Open blank python file
@@ -254,8 +260,8 @@ describe('Code Snippet tests', () => {
     cy.findByRole('button', { name: /cancel/i }).click();
 
     // Check it did not insert the code
-    cy.get('.CodeMirror:visible');
-    cy.get('span.cm-string').should('not.exist');
+    cy.get('.cm-editor:visible');
+    cy.get('.cm-editor .cm-content .cm-line').should('not.exist');
   });
 
   // DEV NOTE: Uncomment the tests below to run them locally
@@ -359,7 +365,7 @@ const populateCodeSnippetFields = (
   editSnippetLanguage(snippetName, language ?? 'Python');
 
   // Add snippet code
-  cy.get('.cm-content[contenteditable="true"]')
+  cy.get('.elyra-metadataEditor-new .cm-content[contenteditable="true"]')
     .first()
     .click({ force: true })
     .type('print("Code Snippet Test")', { delay: 100 });
