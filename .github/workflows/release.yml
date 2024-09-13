@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
     env:
       FORCE_COLOR: "1"
     steps:
@@ -40,7 +41,7 @@ jobs:
         run: |
           set -o pipefail
           LATEST_TAG=$(git describe --tags --match="v*")
-          if [[ "$LATEST_TAG" != $(cat ./elyra/_version.py | grep "__version__" | cut -d'"' -f 2) ]]; then
+          if [[ "$LATEST_TAG" != "v$(cat ./elyra/_version.py | grep "__version__" | cut -d'"' -f 2)" ]]; then
             echo "::error title='$LATEST_TAG tag does not match project version'::"
             exit 1
           fi
