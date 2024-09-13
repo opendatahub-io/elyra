@@ -37,7 +37,7 @@ describe('Code snippet from cells tests', () => {
     ).should('have.class', 'lm-mod-disabled');
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
+  // Depends on https://issues.redhat.com/browse/RHOAIENG-12851
   it.skip('test 1 cell', () => {
     // Create new cell
     cy.get(
@@ -66,7 +66,7 @@ describe('Code snippet from cells tests', () => {
     );
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
+  // Depends on https://issues.redhat.com/browse/RHOAIENG-12851
   it.skip('test 2 cells', () => {
     // Create new cells
     cy.get(

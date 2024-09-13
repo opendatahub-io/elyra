@@ -176,7 +176,7 @@ describe('Code Snippet tests', () => {
     cy.get('.elyra-expandableContainer-details-visible').should('not.exist');
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
+  // Depends on https://issues.redhat.com/browse/RHOAIENG-12851
   it.skip('should update code snippet name after editing it', () => {
     createValidCodeSnippet(snippetName);
 
@@ -239,7 +239,7 @@ describe('Code Snippet tests', () => {
     cy.get('.cm-editor .cm-content .cm-line').contains(/test/i);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12695
+  // Depends on https://issues.redhat.com/browse/RHOAIENG-12850
   it.skip('should fail to insert a java code snippet into python editor', () => {
     // Give time for the Launcher tab to load
     cy.wait(2000);
