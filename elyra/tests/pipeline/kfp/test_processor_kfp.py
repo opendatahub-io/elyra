@@ -974,11 +974,14 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     expected_volume_mounts = op.elyra_props.get(MOUNTED_VOLUMES)
     if len(expected_volume_mounts) > 0:
         # There must be one or more 'volumeMounts' entry and one or more 'volumes' entry
-        assert spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]\
-                        ["exec-run-a-file"].get("pvcMount") is not None, \
-                        spec_docs[1]["platforms"]["kubernetes"]
-        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]\
-                        ["executors"]["exec-run-a-file"]["pvcMount"]
+        assert (
+            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"].get("pvcMount")
+            is not None
+        ), spec_docs[1]["platforms"]["kubernetes"]
+        pvc_mounts = (
+            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]
+            ["executors"]["exec-run-a-file"]["pvcMount"]
+        )
 
         assert len(pvc_mounts) >= len(expected_volume_mounts)
         for volume_mount in expected_volume_mounts:
@@ -990,7 +993,7 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
                     # Once they are implemented, the code below needs to be updated accordingly.
                     # Reference: https://github.com/kubeflow/pipelines/blob/master/
                     #            kubernetes_platform/proto/kubernetes_executor_config.proto#L84
-                    # 
+                    #
                     # assert volumemount_entry.get("subPath", None) == volume_mount.sub_path
                     # assert volumemount_entry.get("readOnly", False) == volume_mount.read_only
                     entry_found = True
@@ -1004,11 +1007,14 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     custom_shared_mem_size = op.elyra_props.get(KUBERNETES_SHARED_MEM_SIZE)
     if custom_shared_mem_size:
         # There must be one 'volumeMounts' entry and one 'volumes' entry
-        assert spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]\
-                           ["exec-run-a-file"].get("pvcMount") is not None, \
-                            spec_docs[1]["platforms"]["kubernetes"]
-        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]\
-                                 ["executors"]["exec-run-a-file"]["pvcMount"]
+        assert (
+            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]
+            ["exec-run-a-file"].get("pvcMount") is not None
+        ), spec_docs[1]["platforms"]["kubernetes"]
+        pvc_mounts = (
+            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]
+            ["executors"]["exec-run-a-file"]["pvcMount"]
+        )
 
         for volumemount_entry in pvc_mounts:
             entry_found = False
