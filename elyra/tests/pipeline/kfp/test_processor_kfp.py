@@ -978,10 +978,9 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
             spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"].get("pvcMount")
             is not None
         ), spec_docs[1]["platforms"]["kubernetes"]
-        pvc_mounts = (
-            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]
-            ["executors"]["exec-run-a-file"]["pvcMount"]
-        )
+        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"][
+            "pvcMount"
+        ]
 
         assert len(pvc_mounts) >= len(expected_volume_mounts)
         for volume_mount in expected_volume_mounts:
@@ -998,9 +997,7 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
                     # assert volumemount_entry.get("readOnly", False) == volume_mount.read_only
                     entry_found = True
                     break
-            assert (
-                entry_found
-            ), f"Cannot find volume mount entry '{volume_mount.path}' in {pvc_mounts}"
+            assert entry_found, f"Cannot find volume mount entry '{volume_mount.path}' in {pvc_mounts}"
 
     #
     # validate custom shared memory size, if applicable
@@ -1008,13 +1005,12 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     if custom_shared_mem_size:
         # There must be one 'volumeMounts' entry and one 'volumes' entry
         assert (
-            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]
-            ["exec-run-a-file"].get("pvcMount") is not None
+            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"].get("pvcMount")
+            is not None
         ), spec_docs[1]["platforms"]["kubernetes"]
-        pvc_mounts = (
-            spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]
-            ["executors"]["exec-run-a-file"]["pvcMount"]
-        )
+        pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]["exec-run-a-file"][
+            "pvcMount"
+        ]
 
         for volumemount_entry in pvc_mounts:
             entry_found = False
@@ -1022,9 +1018,7 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
                 assert volumemount_entry["name"] == "shm"
                 entry_found = True
                 break
-        assert (
-            entry_found
-        ), "Missing volume mount entry for shared memory size in {pvc_mounts}"
+        assert entry_found, "Missing volume mount entry for shared memory size in {pvc_mounts}"
 
     """
     IMPORTANT: TODO: The following code needs to be updated to the KFP v2 once the feature is implemented.
