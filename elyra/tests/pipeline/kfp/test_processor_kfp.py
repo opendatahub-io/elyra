@@ -33,11 +33,7 @@ from elyra.pipeline.kfp.processor_kfp import WorkflowEngineType
 from elyra.pipeline.pipeline import GenericOperation
 from elyra.pipeline.pipeline import Operation
 from elyra.pipeline.pipeline import Pipeline
-from elyra.pipeline.pipeline_constants import KUBERNETES_POD_ANNOTATIONS
-from elyra.pipeline.pipeline_constants import KUBERNETES_POD_LABELS
-from elyra.pipeline.pipeline_constants import KUBERNETES_SECRETS
 from elyra.pipeline.pipeline_constants import KUBERNETES_SHARED_MEM_SIZE
-from elyra.pipeline.pipeline_constants import KUBERNETES_TOLERATIONS
 from elyra.pipeline.pipeline_constants import MOUNTED_VOLUMES
 from elyra.pipeline.processor import PipelineProcessor
 from elyra.pipeline.properties import ComponentProperty
@@ -979,10 +975,10 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
     if len(expected_volume_mounts) > 0:
         # There must be one or more 'volumeMounts' entry and one or more 'volumes' entry
         assert spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]\
-                           ["exec-run-a-file"].get("pvcMount") is not None, \
-                            spec_docs[1]["platforms"]["kubernetes"]
+                        ["exec-run-a-file"].get("pvcMount") is not None, \
+                        spec_docs[1]["platforms"]["kubernetes"]
         pvc_mounts = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]\
-                                 ["executors"]["exec-run-a-file"]["pvcMount"]
+                        ["executors"]["exec-run-a-file"]["pvcMount"]
 
         assert len(pvc_mounts) >= len(expected_volume_mounts)
         for volume_mount in expected_volume_mounts:
