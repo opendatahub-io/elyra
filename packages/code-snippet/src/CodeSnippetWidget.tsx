@@ -43,6 +43,7 @@ import {
   IMarkdownCellModel /*RawCell*/
 } from '@jupyterlab/cells';
 import { CodeEditor, IEditorServices } from '@jupyterlab/codeeditor';
+import { EditorLanguageRegistry } from '@jupyterlab/codemirror';
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { FileEditor } from '@jupyterlab/fileeditor';
@@ -233,9 +234,10 @@ class CodeSnippetDisplay extends MetadataDisplay<ICodeSnippetDisplayProps> {
   private getEditorLanguage = (
     widget: DocumentWidget<FileEditor>
   ): string | undefined => {
-    const editorLanguage =
-      widget.context.sessionContext.kernelPreference.language;
-    return editorLanguage === 'null' ? '' : editorLanguage;
+    const editorLanguage = EditorLanguageRegistry.getDefaultLanguages().find(
+      (language) => language.mime.includes(widget.content.model.mimeType)
+    );
+    return editorLanguage?.displayName ?? '';
   };
 
   // Return the given code wrapped in a markdown code block

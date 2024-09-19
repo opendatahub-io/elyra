@@ -238,8 +238,7 @@ describe('Code Snippet tests', () => {
     cy.get('.cm-editor .cm-content .cm-line').contains(/test/i);
   });
 
-  // Depends on https://issues.redhat.com/browse/RHOAIENG-12850
-  it.skip('should fail to insert a java code snippet into python editor', () => {
+  it('should fail to insert a java code snippet into python editor', () => {
     // Give time for the Launcher tab to load
     cy.wait(2000);
 
@@ -260,7 +259,7 @@ describe('Code Snippet tests', () => {
 
     // Check it did not insert the code
     cy.get('.cm-editor:visible');
-    cy.get('.cm-editor .cm-content .cm-line').should('not.exist');
+    cy.get('.cm-editor .cm-content .cm-line').should('not.contain', /test/i);
   });
 
   // DEV NOTE: Uncomment the tests below to run them locally

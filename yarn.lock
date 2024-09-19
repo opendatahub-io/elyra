@@ -3156,6 +3156,7 @@ __metadata:
     "@jupyterlab/builder": ^4.2.5
     "@jupyterlab/cells": ^4.2.5
     "@jupyterlab/codeeditor": ^4.2.5
+    "@jupyterlab/codemirror": ^4.2.5
     "@jupyterlab/coreutils": ^6.0.6
     "@jupyterlab/docmanager": ^4.2.5
     "@jupyterlab/docregistry": ^4.2.5
