@@ -1088,19 +1088,24 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
         common_curl_options = "--fail -H 'Cache-Control: no-cache'"
 
+        # Verify utils files are present in the container
+        # if not, then download them as per the provided URLs.
+        file_base = os.getenv("ELYRA_FILE_BASE_PATH", "/opt/app-root/bin/utils")
+
         command_args = [
             f"mkdir -p {container_work_dir} && cd {container_work_dir}",
-            f"echo 'Downloading {elyra_bootstrap_script_url}' && "
-            f"curl {common_curl_options} -L {elyra_bootstrap_script_url} --output bootstrapper.py",
-            f"echo 'Downloading {elyra_requirements_url}' && "
-            f"curl {common_curl_options} -L {elyra_requirements_url} --output requirements-elyra.txt",
+            f"[[ -e '{file_base}/bootstrapper.py' ]] && (echo 'bootstrapper.py file already exists'; cp '{file_base}/bootstrapper.py' .) || "  # noqa E501
+            f"(echo 'Downloading {elyra_bootstrap_script_url}'; curl {common_curl_options} -L '{elyra_bootstrap_script_url}' --output bootstrapper.py)",  # noqa E501
+            f"[[ -e '{file_base}/requirements-elyra.txt' ]] && (echo 'requirements-elyra.txt file already exists'; cp '{file_base}/requirements-elyra.txt' .) || "  # noqa E501
+            f"(echo 'Downloading {elyra_requirements_url}'; curl {common_curl_options} -L '{elyra_requirements_url}' --output requirements-elyra.txt)",  # noqa E501
         ]
 
         if is_crio_runtime:
             command_args.append(
                 f"mkdir {container_python_path} && cd {container_python_path} && "
-                f"echo 'Downloading {python_pip_config_url}' && "
-                f"curl {common_curl_options} -L {python_pip_config_url} --output pip.conf && cd .. && "
+                f"[[ -e '{file_base}/pip.conf' ]] && (echo 'pip.conf file already exists'; cp $file_base/pip.conf .) ||"
+                f"(echo 'Downloading {python_pip_config_url}'; curl {common_curl_options} -L '{python_pip_config_url}' --output pip.conf)",  # noqa E501
+                "&& cd .. && ",
             )
 
         bootstrapper_command = [

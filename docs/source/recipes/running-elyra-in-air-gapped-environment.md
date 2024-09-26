@@ -62,5 +62,8 @@ During pipeline execution in the Kubeflow Pipelines or Apache Airflow environmen
         - `ELYRA_REQUIREMENTS_URL` (URL of `.../etc/generic/requirements-elyra.txt`)
     - For Apache Airflow:
         - `ELYRA_BOOTSTRAP_SCRIPT_URL` (URL of `.../elyra/airflow/bootstrapper.py`)
-        - `ELYRA_REQUIREMENTS_URL` (URL of `.../etc/generic/requirements-elyra.txt`)     
+        - `ELYRA_REQUIREMENTS_URL` (URL of `.../etc/generic/requirements-elyra.txt`)
+    
+  Alternatively, for Kubeflow Pipeline users can store the bootstrapper.py, pip.conf and requirements-elyra.txt files in the runtime container itself, so it could be used without having to set the above variables. The path to these files needs to be configured, so Elyra execution can pick it up.
+    - `ELYRA_FILE_BASE_PATH` (default `/opt/app-root/bin/utils`) 
 - **S3-compatible cloud storage for [generic components](../user_guide/pipeline-components.html#generic-components)**: When processing pipeline nodes that are implemented using [generic components](../user_guide/pipeline-components.html#generic-components), Elyra downloads the pipeline artifacts that were uploaded when the pipeline was exported or submitted.
