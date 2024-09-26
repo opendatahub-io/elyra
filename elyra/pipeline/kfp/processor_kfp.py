@@ -1062,7 +1062,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # meant for the opendatahub-io/Data-science-pipelines v2 use case
         # and should not be opened as PR against upstream Elyra
         elyra_github_org = os.getenv("ELYRA_GITHUB_ORG", "opendatahub-io")
-        elyra_github_branch = os.getenv("ELYRA_GITHUB_BRANCH", "dspv2" if "dev" in __version__ else __version__)
+        elyra_github_branch = os.getenv("ELYRA_GITHUB_BRANCH", "jupyterlab4" if "dev" in __version__ else __version__)
         elyra_bootstrap_script_url = os.getenv(
             "ELYRA_BOOTSTRAP_SCRIPT_URL",
             f"https://raw.githubusercontent.com/{elyra_github_org}/elyra/{elyra_github_branch}/elyra/kfp/bootstrapper.py",  # noqa E501
