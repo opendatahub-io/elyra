@@ -62,7 +62,7 @@ jobs:
           echo "::info title='$LATEST_TAG tag is ready to be released to PyPI' ::"
       - name: Build package
         run: |
-          make install
+          make install-prod
       - name: Publish package on PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
