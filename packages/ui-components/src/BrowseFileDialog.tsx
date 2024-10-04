@@ -237,8 +237,8 @@ export const showBrowseFileDialog = async (
       const relativeToPath = options.rootPath.endsWith('/')
         ? options.rootPath
         : options.rootPath + '/';
-      result.value.forEach((val: string) => {
-        val = val.replace(relativeToPath, '');
+      result.value = result.value.map((val: string) => {
+        return val.replace(relativeToPath, '');
       });
     }
 

@@ -136,7 +136,7 @@
           "app_data": {
             "component_parameters": {
               "dependencies": [
-                "scripts/setup.txt"
+                "setup.txt"
               ],
               "include_subdirectories": false,
               "outputs": [],
