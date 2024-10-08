@@ -274,7 +274,9 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Add a command to create new Python editor
     app.commands.addCommand(commandIDs.createNewPythonEditor, {
       label: (args) =>
-        args['isPalette'] ? 'New Python Editor' : 'Python Editor',
+        args['isPalette'] || args['isContextMenu']
+          ? 'New Python Editor'
+          : 'Python Editor',
       caption: 'Create a new Python Editor',
       icon: (args) => (args['isPalette'] ? undefined : pythonIcon),
       execute: (args) => {
@@ -287,6 +289,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       command: commandIDs.createNewPythonEditor,
       args: { isPalette: true },
       category: 'Elyra'
+    });
+
+    app.contextMenu.addItem({
+      command: commandIDs.createNewPythonEditor,
+      args: { isContextMenu: true },
+      selector: '.jp-DirListing-content',
+      rank: 200
     });
   }
 };

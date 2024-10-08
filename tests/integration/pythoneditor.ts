@@ -60,6 +60,13 @@ describe('Python Editor tests', () => {
     cy.closeTab(-1);
   });
 
+  it('opens blank Python editor from file explorer context menu', () => {
+    cy.get('.jp-FileBrowser').should('be.visible');
+    cy.get('.jp-DirListing-content').rightclick();
+    cy.get('.lm-Menu').contains('New Python Editor').click();
+    cy.closeTab(-1);
+  });
+
   it('check toolbar and its content for Python file', () => {
     cy.createNewScriptEditor('Python');
     cy.checkScriptEditorToolbarContent();

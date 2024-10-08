@@ -191,10 +191,14 @@ const extension: JupyterFrontEndPlugin<void> = {
           return `New ${PIPELINE_EDITOR}`;
         }
         if (args.runtimeType?.id === 'LOCAL') {
-          return `Generic ${PIPELINE_EDITOR}`;
+          const contextMenuPrefix = args.isContextMenu ? 'New ' : '';
+          return `${contextMenuPrefix}Generic ${PIPELINE_EDITOR}`;
         }
         if (args.isMenu) {
           return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+        }
+        if (args.isContextMenu) {
+          return `New ${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
         }
         return PIPELINE_EDITOR;
       },
@@ -297,6 +301,15 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (launcher) {
           const fileMenuItems: IRankedMenu.IItemOptions[] = [];
 
+          let contextMenuRank = 100;
+
+          app.contextMenu.addItem({
+            command: openPipelineEditorCommand,
+            type: 'separator',
+            selector: '.jp-DirListing-content',
+            rank: ++contextMenuRank
+          });
+
           for (const t of resolvedTypes as any) {
             launcher.add({
               command: openPipelineEditorCommand,
@@ -310,7 +323,21 @@ const extension: JupyterFrontEndPlugin<void> = {
               args: { runtimeType: t, isMenu: true },
               rank: t.id === 'LOCAL' ? 90 : 91
             });
+
+            app.contextMenu.addItem({
+              command: openPipelineEditorCommand,
+              args: { runtimeType: t, isContextMenu: true },
+              selector: '.jp-DirListing-content',
+              rank: ++contextMenuRank
+            });
           }
+
+          app.contextMenu.addItem({
+            command: openPipelineEditorCommand,
+            type: 'separator',
+            selector: '.jp-DirListing-content',
+            rank: ++contextMenuRank
+          });
 
           menu.fileMenu.newMenu.addGroup(fileMenuItems);
         }

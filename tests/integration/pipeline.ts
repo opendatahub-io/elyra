@@ -141,6 +141,13 @@ describe('Pipeline Editor tests', () => {
     checkEnabledToolbarButtons(enabledButtons);
   });
 
+  it('opens blank Pipeline editor from file explorer context menu', () => {
+    cy.get('.jp-FileBrowser').should('be.visible');
+    cy.get('.jp-DirListing-content').rightclick();
+    cy.get('.lm-Menu').contains('New Generic Pipeline Editor').click();
+    cy.closeTab(-1);
+  });
+
   it('matches complex pipeline snapshot', () => {
     cy.bootstrapFile('pipelines/consumer.ipynb');
     cy.bootstrapFile('pipelines/create-source-files.py');
