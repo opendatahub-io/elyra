@@ -1,0 +1,66 @@
+name: Update version through Pull Request
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version'
+        required: true
+      source_branch:
+        description: 'Source branch to update the version'
+        required: true
+        default: 'main'
+      target_branch:
+        description: 'Target branch for the pull request'
+        required: true
+
+env:
+  NODE_VERSION: 20.11.0
+  YARN_VERSION: 3.5.0
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source_branch }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Yarn ${{ env.YARN_VERSION }}
+        run: |
+          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
+          yarn set version ${{ env.YARN_VERSION }}
+          git checkout package.json
+          yarn --version
+
+      - name: Install dependencies
+        run: |
+          make yarn-install
+
+      - name: Update version to ${{ github.event.inputs.version }}
+        id: update
+        run: |
+          ./.github/workflows/scripts/update_version.sh ${{ github.event.inputs.version }}
+
+          # Clean up yarn setup changes
+          git checkout .yarnrc.yml
+
+          TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+          SYNC_BRANCH=update-version__${{ github.event.inputs.version }}__${TIMESTAMP}
+          echo "branch=$SYNC_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create a pull request
+        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+        with:
+          branch: ${{ steps.update.outputs.branch }}
+          base: ${{ github.event.inputs.target_branch }}
+          title: 'Update version to `${{ github.event.inputs.version }}`'
+          body: ':robot: This is an automated PR created by `/.github/workflows/update-version-through-pr.yml` to update the project version to `${{ github.event.inputs.version }}`.'
