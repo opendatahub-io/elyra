@@ -71,7 +71,7 @@ export const code_snippet_extension: JupyterFrontEndPlugin<void> = {
       icon: codeSnippetIcon,
       getCurrentWidget,
       editorServices,
-      titleContext: 'code snippet'
+      titleContext: ''
     });
     const codeSnippetWidgetId = `elyra-metadata:${CODE_SNIPPET_SCHEMASPACE}`;
     codeSnippetWidget.id = codeSnippetWidgetId;
