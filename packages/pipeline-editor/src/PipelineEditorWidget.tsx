@@ -480,7 +480,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
-    if (args.propertyID.includes('dependencies')) {
+    if (args.propertyID?.includes('dependencies')) {
       const res = await showBrowseFileDialog(browserFactory.model.manager, {
         multiselect: true,
         includeDir: true,
