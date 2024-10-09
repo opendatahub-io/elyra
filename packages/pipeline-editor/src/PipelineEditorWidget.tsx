@@ -344,7 +344,11 @@ const PipelineWrapper: React.FC<IProps> = ({
               if (Object.keys(data[key][i]).length > 0) {
                 newArray.push(data[key][i]);
               }
-            } else if (data[key][i] !== null && data[key][i] !== '') {
+            } else if (
+              data[key][i] !== undefined &&
+              data[key][i] !== null &&
+              data[key][i] !== ''
+            ) {
               newArray.push(data[key][i]);
             }
           }
