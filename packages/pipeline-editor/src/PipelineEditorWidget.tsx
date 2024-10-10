@@ -348,17 +348,17 @@ const PipelineWrapper: React.FC<IProps> = ({
         } else if (Array.isArray(data[key])) {
           const newArray = [];
           for (const i in data[key]) {
-            if (typeof data[key][i] === 'object') {
-              removeNullValues(data[key][i], true);
-              if (Object.keys(data[key][i]).length > 0) {
-                newArray.push(data[key][i]);
+            const item = data[key][i];
+            if (item === undefined || item === null || item === '') {
+              continue;
+            }
+            if (typeof item === 'object') {
+              removeNullValues(item, true);
+              if (Object.keys(item).length > 0) {
+                newArray.push(item);
               }
-            } else if (
-              data[key][i] !== undefined &&
-              data[key][i] !== null &&
-              data[key][i] !== ''
-            ) {
-              newArray.push(data[key][i]);
+            } else {
+              newArray.push(item);
             }
           }
           data[key] = newArray;
