@@ -161,6 +161,7 @@ class PipelineEditorWidget extends ReactWidget {
   refreshPaletteSignal: Signal<this, any>;
   context: Context;
   settings: ISettingRegistry.ISettings;
+  defaultRuntimeType: string;
 
   constructor(options: any) {
     super();
@@ -171,6 +172,7 @@ class PipelineEditorWidget extends ReactWidget {
     this.refreshPaletteSignal = options.refreshPaletteSignal;
     this.context = options.context;
     this.settings = options.settings;
+    this.defaultRuntimeType = options.defaultRuntimeType;
     let nullPipeline = this.context.model.toJSON() === null;
 
     this.context.model.contentChanged.connect(() => {
@@ -181,7 +183,7 @@ class PipelineEditorWidget extends ReactWidget {
     });
     this.context.fileChanged.connect(() => {
       if (this.context.model.toJSON() === null) {
-        const pipelineJson = getEmptyPipelineJson(undefined);
+        const pipelineJson = getEmptyPipelineJson(this.defaultRuntimeType);
         this.context.model.fromString(JSON.stringify(pipelineJson));
       }
     });
@@ -1210,6 +1212,7 @@ export class PipelineEditorFactory extends ABCWidgetFactory<DocumentWidget> {
   addFileToPipelineSignal: Signal<this, any>;
   refreshPaletteSignal: Signal<this, any>;
   settings: ISettingRegistry.ISettings;
+  defaultRuntimeType: string;
 
   constructor(options: any) {
     super(options);
@@ -1219,6 +1222,7 @@ export class PipelineEditorFactory extends ABCWidgetFactory<DocumentWidget> {
     this.addFileToPipelineSignal = new Signal<this, any>(this);
     this.refreshPaletteSignal = new Signal<this, any>(this);
     this.settings = options.settings;
+    this.defaultRuntimeType = options.defaultRuntimeType;
   }
 
   protected createNewWidget(context: DocumentRegistry.Context): DocumentWidget {
@@ -1230,7 +1234,8 @@ export class PipelineEditorFactory extends ABCWidgetFactory<DocumentWidget> {
       context: context,
       addFileToPipelineSignal: this.addFileToPipelineSignal,
       refreshPaletteSignal: this.refreshPaletteSignal,
-      settings: this.settings
+      settings: this.settings,
+      defaultRuntimeType: this.defaultRuntimeType
     };
     const content = new PipelineEditorWidget(props);
 
