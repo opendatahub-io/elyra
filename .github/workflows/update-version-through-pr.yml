@@ -17,6 +17,7 @@ on:
 env:
   NODE_VERSION: 20.11.0
   YARN_VERSION: 3.5.0
+  PYTHON_VERSION: 3.11
 
 jobs:
   update_version:
@@ -28,6 +29,11 @@ jobs:
         with:
           ref: ${{ github.event.inputs.source_branch }}
           fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
