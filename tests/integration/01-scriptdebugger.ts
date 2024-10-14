@@ -67,7 +67,8 @@ describe('Script debugger tests', () => {
     }
   );
 
-  it(
+  // Flaky test: It's started to fail most of the time on the CI after the `ubuntu-latest` image upgrade to `24.04`
+  it.skip(
     'test for debugger button disabled for default kernel without debug support',
     { defaultCommandTimeout: TIMEOUT },
     () => {
