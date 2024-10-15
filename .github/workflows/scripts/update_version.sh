@@ -10,6 +10,9 @@ NEW_VERSION=$1
 echo "Updating version in UI packages ..."
 npx lerna@8.1.8 version "$NEW_VERSION" --no-git-tag-version --no-push --yes
 
+echo "Updating version in the root package.json ..."
+npm version "$NEW_VERSION" --no-git-tag-version
+
 echo "Formatting files ..."
 make prettier-ui
 
