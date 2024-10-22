@@ -49,6 +49,7 @@ import {
   Context
 } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
+import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import 'carbon-components/css/carbon-components.min.css';
@@ -487,17 +488,22 @@ const PipelineWrapper: React.FC<IProps> = ({
   );
 
   const onFileRequested = async (args: any): Promise<string[] | undefined> => {
-    const filename = PipelineService.getWorkspaceRelativeNodePath(
-      contextRef.current.path,
-      args.filename ?? ''
-    );
+    const pipelineFilePath = contextRef.current.path;
+    const contextFilePath = args.filename
+      ? PipelineService.getWorkspaceRelativeNodePath(
+          pipelineFilePath,
+          args.filename
+        )
+      : pipelineFilePath;
+    const contextFolderPath = PathExt.dirname(contextFilePath);
+
     if (args.propertyID?.includes('dependencies')) {
       const res = await showBrowseFileDialog(browserFactory.model.manager, {
         multiselect: true,
         includeDir: true,
-        rootPath: PathExt.dirname(filename),
+        rootPath: contextFolderPath,
         filter: (model: any): boolean => {
-          return model.path !== filename;
+          return model.path !== pipelineFilePath;
         }
       });
 
@@ -506,9 +512,9 @@ const PipelineWrapper: React.FC<IProps> = ({
       }
     } else {
       const res = await showBrowseFileDialog(browserFactory.model.manager, {
-        startPath: PathExt.dirname(filename),
-        filter: (model: any): boolean => {
-          if (args.filters?.File === undefined) {
+        startPath: contextFolderPath,
+        filter: (model: Contents.IModel): boolean => {
+          if (args.filters?.File === undefined || model.type === 'directory') {
             return true;
           }
 
