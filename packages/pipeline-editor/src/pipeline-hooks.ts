@@ -44,15 +44,57 @@ const metadataFetcher = async <T>(key: string): Promise<T> => {
   return await MetadataService.getMetadata(key);
 };
 
-export const useRuntimeImages = (): IReturn<IRuntimeImagesResponse> => {
+export const useRuntimeImages = (
+  additionalRuntimeImages?: IRuntimeImage[]
+): IReturn<IRuntimeImagesResponse> => {
   const { data, error } = useSWR<IRuntimeImagesResponse>(
     'runtime-images',
     metadataFetcher
   );
 
-  data?.sort((a, b) => 0 - (a.name > b.name ? -1 : 1));
+  let result: IRuntimeImage[] | undefined = data;
 
-  return { data, error };
+  if (result && additionalRuntimeImages) {
+    // Sort and remove duplicates from additionalRuntimeImages
+    additionalRuntimeImages.sort((a, b) => 0 - (a.name > b.name ? -1 : 1));
+    additionalRuntimeImages = additionalRuntimeImages.filter(
+      (image, index, self) =>
+        index ===
+        self.findIndex(
+          (otherImage) =>
+            image.name === otherImage.name &&
+            image.display_name === otherImage.display_name &&
+            image.metadata.image_name === otherImage.metadata.image_name
+        )
+    );
+
+    // Remove previously added additionalRuntimeImages from result
+    result = result.filter(
+      (runtimeImage) =>
+        additionalRuntimeImages?.findIndex(
+          (additionalRuntimeImage) =>
+            runtimeImage.name === additionalRuntimeImage.name &&
+            runtimeImage.display_name === additionalRuntimeImage.display_name &&
+            runtimeImage.metadata.image_name ===
+              additionalRuntimeImage.metadata.image_name
+        ) < 0
+    );
+
+    // Find out which additionalRuntimeImages are not yet in result
+    const existingImageNames = result.map(
+      (runtimeImage) => runtimeImage.metadata.image_name
+    );
+    const runtimeImagesToAdd = additionalRuntimeImages.filter(
+      (additionalRuntimeImage) =>
+        !existingImageNames.includes(additionalRuntimeImage.metadata.image_name)
+    );
+
+    // Sort and add missing images to result (at the end)
+    result.sort((a, b) => 0 - (a.name > b.name ? -1 : 1));
+    Array.prototype.push.apply(result, runtimeImagesToAdd);
+  }
+
+  return { data: result, error };
 };
 
 const schemaFetcher = async <T>(key: string): Promise<T> => {
@@ -267,8 +309,13 @@ const updateRuntimeImages = (
   }
 };
 
-export const usePalette = (type = 'local'): IReturn<any> => {
-  const { data: runtimeImages, error: runtimeError } = useRuntimeImages();
+export const usePalette = (
+  type = 'local',
+  additionalRuntimeImages?: IRuntimeImage[]
+): IReturn<any> => {
+  const { data: runtimeImages, error: runtimeError } = useRuntimeImages(
+    additionalRuntimeImages
+  );
 
   const {
     data: palette,
