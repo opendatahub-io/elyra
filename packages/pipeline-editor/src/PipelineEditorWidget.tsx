@@ -58,7 +58,13 @@ import { toArray } from '@lumino/algorithm';
 import { IDragEvent } from '@lumino/dragdrop';
 import { Signal } from '@lumino/signaling';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -246,11 +252,41 @@ const PipelineWrapper: React.FC<IProps> = ({
 
   const runtimeDisplayName = getDisplayName(runtimesSchema, type) ?? 'Generic';
 
+  const filePersistedRuntimeImages = useMemo(() => {
+    const images = [];
+    const pipelineDefaultRuntimeImage =
+      pipeline?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults
+        ?.runtime_image;
+    if (pipelineDefaultRuntimeImage?.length > 0) {
+      images.push(pipelineDefaultRuntimeImage);
+    }
+    const nodes = pipeline?.pipelines?.[0]?.nodes;
+    if (nodes?.length > 0) {
+      for (const node of nodes) {
+        const nodeRuntimeImage =
+          node?.app_data?.component_parameters?.runtime_image;
+        if (nodeRuntimeImage?.length > 0) {
+          images.push(nodeRuntimeImage);
+        }
+      }
+    }
+
+    return images.map((imageName) => {
+      return {
+        name: imageName,
+        display_name: imageName,
+        metadata: {
+          image_name: imageName
+        }
+      };
+    });
+  }, [pipeline]);
+
   const {
     data: palette,
     error: paletteError,
     mutate: mutatePalette
-  } = usePalette(type);
+  } = usePalette(type, filePersistedRuntimeImages);
 
   useEffect(() => {
     const handleMutateSignal = (): void => {
