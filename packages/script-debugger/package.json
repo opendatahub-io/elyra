@@ -1,6 +1,6 @@
 {
   "name": "@elyra/script-debugger-extension",
-  "version": "0.0.0",
+  "version": "4.2.0",
   "description": "JupyterLab extension - visual debugging support for script editors",
   "keywords": [
     "jupyter",
@@ -52,7 +52,7 @@
     "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@elyra/script-editor": "0.0.0",
+    "@elyra/script-editor": "4.2.0",
     "@jupyterlab/application": "^4.2.5",
     "@jupyterlab/debugger": "^4.2.5",
     "@jupyterlab/fileeditor": "^4.2.5",
