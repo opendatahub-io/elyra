@@ -286,9 +286,7 @@ jobs:
 
           URLS=""
           for tag_prefix in $(echo "${{ env.QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV }}" | tr ',' '\n'); do
-            LATEST_TAG=$(curl -s "https://quay.io/api/v1/repository/${{ env.QUAY_WORKBENCH_IMAGES_REPOSITORY}}/tag/?onlyActiveTags=true" | \
-              jq -r ".tags | map(select(.name | startswith(\"${tag_prefix}\"))) | .[].name" | \
-              sort -r | head -n 1)
+            LATEST_TAG=$(curl -s "https://quay.io/api/v1/repository/${{ env.QUAY_WORKBENCH_IMAGES_REPOSITORY}}/tag/?onlyActiveTags=true&filter_tag_name=like:${tag_prefix}&limit=1" | jq -r ".tags[].name")
             echo "Latest tag: $LATEST_TAG"
 
             CONTAINER_IMAGE=ghcr.io/${{ github.repository }}/workbench-images:${LATEST_TAG}${TAG_SUFFIX}
