@@ -88,12 +88,12 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
   /**
    * Saves metadata through either put or post request.
    */
-  const saveMetadata = (): void => {
+  const saveMetadata = () => {
     if (invalidForm) {
       return;
     }
 
-    const newMetadata: any = {
+    const newMetadata = {
       schema_name: schemaName,
       display_name: metadata?.['_noCategory']?.['display_name'],
       metadata: flattenFormData(metadata)
@@ -101,7 +101,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
 
     if (!name) {
       MetadataService.postMetadata(schemaspace, JSON.stringify(newMetadata))
-        .then((response: any): void => {
+        .then(() => {
           setDirty(false);
           onSave();
           close();
@@ -113,7 +113,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
         name,
         JSON.stringify(newMetadata)
       )
-        .then((response: any): void => {
+        .then(() => {
           setDirty(false);
           onSave();
           close();

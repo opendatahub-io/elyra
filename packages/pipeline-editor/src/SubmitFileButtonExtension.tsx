@@ -25,7 +25,11 @@ import * as React from 'react';
 
 import { FileSubmissionDialog } from './FileSubmissionDialog';
 import { formDialogWidget } from './formDialogWidget';
-import { PipelineService, RUNTIMES_SCHEMASPACE } from './PipelineService';
+import {
+  IRuntimeType,
+  PipelineService,
+  RUNTIMES_SCHEMASPACE
+} from './PipelineService';
 import { createRuntimeData, getConfigDetails } from './runtime-utils';
 import Utils from './utils';
 
@@ -58,113 +62,109 @@ export class SubmitFileButtonExtension<
       await context.save();
     }
 
-    const env = await ContentParser.getEnvVars(context.path).catch((error) =>
-      RequestErrors.serverError(error)
-    );
-    const runtimeTypes: any = await PipelineService.getRuntimeTypes().catch(
-      (error) => RequestErrors.serverError(error)
-    );
-    const runtimes = await PipelineService.getRuntimes()
-      .then((runtimeList) => {
-        return runtimeList.filter((runtime: any) => {
-          return (
-            !runtime.metadata.runtime_enabled &&
-            !!runtimeTypes.find(
-              (r: any) => runtime.metadata.runtime_type === r.id
-            )
+    try {
+      const env = await ContentParser.getEnvVars(context.path);
+
+      const runtimeTypes: IRuntimeType[] =
+        await PipelineService.getRuntimeTypes();
+      const runtimes = await PipelineService.getRuntimes().then(
+        (runtimeList) => {
+          return runtimeList.filter((runtime: any) => {
+            return (
+              !runtime.metadata.runtime_enabled &&
+              !!runtimeTypes.find((r) => runtime.metadata.runtime_type === r.id)
+            );
+          });
+        }
+      );
+      const images = await PipelineService.getRuntimeImages();
+      const schema = await PipelineService.getRuntimesSchema();
+
+      const runtimeData = createRuntimeData({ schema, runtimes });
+
+      if (!runtimeData.platforms.find((p) => p.configs.length > 0)) {
+        const res = await RequestErrors.noMetadataError(
+          'runtime',
+          `run file as pipeline.`
+        );
+
+        if (res.button.label.includes(RUNTIMES_SCHEMASPACE)) {
+          // Open the runtimes widget
+          Utils.getLabShell(document)?.activateById(
+            `elyra-metadata:${RUNTIMES_SCHEMASPACE}`
           );
-        });
-      })
-      .catch((error) => RequestErrors.serverError(error));
-    const images = await PipelineService.getRuntimeImages().catch((error) =>
-      RequestErrors.serverError(error)
-    );
-    const schema = await PipelineService.getRuntimesSchema().catch((error) =>
-      RequestErrors.serverError(error)
-    );
+        }
+        return;
+      }
 
-    const runtimeData = createRuntimeData({ schema, runtimes });
+      let dependencyFileExtension = PathExt.extname(context.path);
+      if (dependencyFileExtension === '.ipynb') {
+        dependencyFileExtension = '.py';
+      }
 
-    if (!runtimeData.platforms.find((p) => p.configs.length > 0)) {
-      const res = await RequestErrors.noMetadataError(
-        'runtime',
-        `run file as pipeline.`
+      const dialogOptions = {
+        title: 'Run file as pipeline',
+        body: formDialogWidget(
+          <FileSubmissionDialog
+            env={env}
+            dependencyFileExtension={dependencyFileExtension}
+            images={images}
+            runtimeData={runtimeData}
+          />
+        ),
+        buttons: [Dialog.cancelButton(), Dialog.okButton()]
+      };
+
+      const dialogResult = await showFormDialog(dialogOptions);
+
+      if (dialogResult.value === null) {
+        // When Cancel is clicked on the dialog, just return
+        return;
+      }
+
+      const {
+        runtime_config,
+        framework,
+        cpu,
+        cpu_limit,
+        gpu,
+        memory,
+        memory_limit,
+        dependency_include,
+        dependencies,
+        ...envObject
+      } = dialogResult.value;
+
+      const configDetails = getConfigDetails(runtimeData, runtime_config);
+
+      // prepare file submission details
+      const pipeline = Utils.generateSingleFilePipeline(
+        context.path,
+        configDetails,
+        framework,
+        dependency_include ? dependencies.split(',') : undefined,
+        envObject,
+        cpu,
+        cpu_limit,
+        gpu,
+        memory,
+        memory_limit
       );
 
-      if (res.button.label.includes(RUNTIMES_SCHEMASPACE)) {
-        // Open the runtimes widget
-        Utils.getLabShell(document).activateById(
-          `elyra-metadata:${RUNTIMES_SCHEMASPACE}`
-        );
-      }
-      return;
+      PipelineService.submitPipeline(
+        pipeline,
+        configDetails?.platform.displayName ?? ''
+      );
+    } catch (error) {
+      RequestErrors.serverError(error);
     }
-
-    let dependencyFileExtension = PathExt.extname(context.path);
-    if (dependencyFileExtension === '.ipynb') {
-      dependencyFileExtension = '.py';
-    }
-
-    const dialogOptions = {
-      title: 'Run file as pipeline',
-      body: formDialogWidget(
-        <FileSubmissionDialog
-          env={env}
-          dependencyFileExtension={dependencyFileExtension}
-          images={images}
-          runtimeData={runtimeData}
-        />
-      ),
-      buttons: [Dialog.cancelButton(), Dialog.okButton()]
-    };
-
-    const dialogResult = await showFormDialog(dialogOptions);
-
-    if (dialogResult.value === null) {
-      // When Cancel is clicked on the dialog, just return
-      return;
-    }
-
-    const {
-      runtime_config,
-      framework,
-      cpu,
-      cpu_limit,
-      gpu,
-      memory,
-      memory_limit,
-      dependency_include,
-      dependencies,
-      ...envObject
-    } = dialogResult.value;
-
-    const configDetails = getConfigDetails(runtimeData, runtime_config);
-
-    // prepare file submission details
-    const pipeline = Utils.generateSingleFilePipeline(
-      context.path,
-      configDetails,
-      framework,
-      dependency_include ? dependencies.split(',') : undefined,
-      envObject,
-      cpu,
-      cpu_limit,
-      gpu,
-      memory,
-      memory_limit
-    );
-
-    PipelineService.submitPipeline(
-      pipeline,
-      configDetails?.platform.displayName ?? ''
-    ).catch((error) => RequestErrors.serverError(error));
   };
 
   createNew(editor: T): IDisposable {
     // Create the toolbar button
     const submitFileButton = new ToolbarButton({
       label: 'Run as Pipeline',
-      onClick: (): any => this.showWidget(editor),
+      onClick: () => this.showWidget(editor),
       tooltip: 'Run file as batch'
     });
 

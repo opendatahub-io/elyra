@@ -19,7 +19,6 @@ import {
   IMetadata,
   MetadataDisplay,
   IMetadataDisplayProps
-  //IMetadataDisplayState,
 } from '@elyra/metadata-common';
 import { IDictionary, MetadataService } from '@elyra/services';
 import { RequestErrors } from '@elyra/ui-components';

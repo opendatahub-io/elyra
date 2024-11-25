@@ -20,7 +20,6 @@ import {
   IMetadata,
   MetadataDisplay,
   IMetadataDisplayProps,
-  //IMetadataDisplayState,
   IMetadataActionButton
 } from '@elyra/metadata-common';
 import { IDictionary, MetadataService } from '@elyra/services';
@@ -36,13 +35,6 @@ export const COMPONENT_CATALOGS_SCHEMASPACE = 'component-catalogs';
 
 const COMPONENT_CATALOGS_CLASS = 'elyra-metadata-component-catalogs';
 
-const handleError = (error: any): void => {
-  // silently eat a 409, the server will log in in the console
-  if (error.status !== 409) {
-    RequestErrors.serverError(error);
-  }
-};
-
 /**
  * A React Component for displaying the component catalogs list.
  */
@@ -54,7 +46,7 @@ class ComponentCatalogsDisplay extends MetadataDisplay<IMetadataDisplayProps> {
         icon: refreshIcon,
         onClick: (): void => {
           PipelineService.refreshComponentsCache(metadata.name)
-            .then((response: any): void => {
+            .then((): void => {
               this.props.updateMetadata();
             })
             .catch((error) =>
@@ -183,10 +175,15 @@ export class ComponentCatalogsWidget extends MetadataWidget {
 
   refreshMetadata(): void {
     PipelineService.refreshComponentsCache()
-      .then((response: any): void => {
+      .then((): void => {
         this.updateMetadataAndRefresh();
       })
-      .catch((error) => handleError(error));
+      .catch((error) => {
+        // silently eat a 409, the server will log in in the console
+        if (error.status !== 409) {
+          RequestErrors.serverError(error);
+        }
+      });
   }
 
   renderDisplay(metadata: IMetadata[]): React.ReactElement {

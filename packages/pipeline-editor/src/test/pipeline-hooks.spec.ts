@@ -52,7 +52,12 @@ const createMockComponent = (name: string): Component => {
     type: 'execution_node',
     inputs: [],
     outputs: [],
-    app_data: {}
+    app_data: {
+      image: 'image',
+      ui_data: {
+        image: 'ui_data_image'
+      }
+    }
   };
 };
 

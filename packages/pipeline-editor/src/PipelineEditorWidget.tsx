@@ -1205,7 +1205,6 @@ const PipelineWrapper: React.FC<IProps> = ({
 
   return (
     <ExtendedThemeProvider theme={theme}>
-      z
       <ToastContainer
         position="bottom-center"
         autoClose={30000}
