@@ -15,7 +15,12 @@
  */
 
 import { ContentParser } from '@elyra/services';
-import { RequestErrors, showFormDialog } from '@elyra/ui-components';
+import {
+  GenericObjectType,
+  IErrorResponse,
+  RequestErrors,
+  showFormDialog
+} from '@elyra/ui-components';
 import { Dialog, showDialog, ToolbarButton } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
@@ -25,11 +30,7 @@ import * as React from 'react';
 
 import { FileSubmissionDialog } from './FileSubmissionDialog';
 import { formDialogWidget } from './formDialogWidget';
-import {
-  IRuntimeType,
-  PipelineService,
-  RUNTIMES_SCHEMASPACE
-} from './PipelineService';
+import { PipelineService, RUNTIMES_SCHEMASPACE } from './PipelineService';
 import { createRuntimeData, getConfigDetails } from './runtime-utils';
 import Utils from './utils';
 
@@ -65,11 +66,10 @@ export class SubmitFileButtonExtension<
     try {
       const env = await ContentParser.getEnvVars(context.path);
 
-      const runtimeTypes: IRuntimeType[] =
-        await PipelineService.getRuntimeTypes();
+      const runtimeTypes = await PipelineService.getRuntimeTypes();
       const runtimes = await PipelineService.getRuntimes().then(
         (runtimeList) => {
-          return runtimeList.filter((runtime: any) => {
+          return runtimeList?.filter((runtime) => {
             return (
               !runtime.metadata.runtime_enabled &&
               !!runtimeTypes.find((r) => runtime.metadata.runtime_type === r.id)
@@ -77,8 +77,24 @@ export class SubmitFileButtonExtension<
           });
         }
       );
+
+      if (!runtimes) {
+        await RequestErrors.noMetadataError('runtime');
+        return;
+      }
+
       const images = await PipelineService.getRuntimeImages();
       const schema = await PipelineService.getRuntimesSchema();
+
+      if (!schema) {
+        await RequestErrors.noMetadataError('schema');
+        return;
+      }
+
+      if (!images) {
+        await RequestErrors.noMetadataError('runtime images');
+        return;
+      }
 
       const runtimeData = createRuntimeData({ schema, runtimes });
 
@@ -102,7 +118,7 @@ export class SubmitFileButtonExtension<
         dependencyFileExtension = '.py';
       }
 
-      const dialogOptions = {
+      const dialogOptions: Partial<Dialog.IOptions<GenericObjectType>> = {
         title: 'Run file as pipeline',
         body: formDialogWidget(
           <FileSubmissionDialog
@@ -156,7 +172,7 @@ export class SubmitFileButtonExtension<
         configDetails?.platform.displayName ?? ''
       );
     } catch (error) {
-      RequestErrors.serverError(error);
+      await RequestErrors.serverError(error as IErrorResponse);
     }
   };
 

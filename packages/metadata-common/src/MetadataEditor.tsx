@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import { MetadataService } from '@elyra/services';
-import { RequestErrors, FormEditor } from '@elyra/ui-components';
+import { ISchemaResource, MetadataService } from '@elyra/services';
+import {
+  RequestErrors,
+  FormEditor,
+  GenericObjectType
+} from '@elyra/ui-components';
 
 import * as React from 'react';
 
@@ -30,12 +34,12 @@ interface IMetadataEditorComponentProps extends IMetadataEditorProps {
   /**
    * Schema including the metadata wrapper and other fields like display name.
    */
-  schemaTop: any;
+  schemaTop: ISchemaResource;
 
   /**
    * Metadata that has already been defined (if this is not a new instance)
    */
-  initialMetadata: any;
+  initialMetadata: GenericObjectType;
 
   /**
    * Handler for setting dirty state in the parent component.
@@ -79,7 +83,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
 }: IMetadataEditorComponentProps) => {
   const [invalidForm, setInvalidForm] = React.useState(name === undefined);
 
-  const schema = schemaTop.properties.metadata;
+  const schema = schemaTop.properties?.metadata;
 
   const [metadata, setMetadata] = React.useState(initialMetadata);
   const displayName = initialMetadata?.['_noCategory']?.['display_name'];
@@ -100,25 +104,25 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
     };
 
     if (!name) {
-      MetadataService.postMetadata(schemaspace, JSON.stringify(newMetadata))
+      MetadataService.postMetadata(schemaspace, newMetadata)
         .then(() => {
           setDirty(false);
           onSave();
           close();
         })
-        .catch((error) => RequestErrors.serverError(error));
+        .catch(async (error) => {
+          await RequestErrors.serverError(error);
+        });
     } else {
-      MetadataService.putMetadata(
-        schemaspace,
-        name,
-        JSON.stringify(newMetadata)
-      )
+      MetadataService.putMetadata(schemaspace, name, newMetadata)
         .then(() => {
           setDirty(false);
           onSave();
           close();
         })
-        .catch((error) => RequestErrors.serverError(error));
+        .catch(async (error) => {
+          await RequestErrors.serverError(error);
+        });
     }
   };
 
@@ -132,8 +136,10 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
    * @param newFormData - Form data with category wrappers.
    * @returns - Form data as the server expects it.
    */
-  const flattenFormData = (newFormData: any): any => {
-    const flattened: { [id: string]: any } = {};
+  const flattenFormData = (
+    newFormData: GenericObjectType
+  ): GenericObjectType => {
+    const flattened: GenericObjectType = {};
     for (const category in newFormData) {
       for (const property in newFormData[category]) {
         flattened[property] = newFormData[category][property];
@@ -167,8 +173,8 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
         ) : null}
       </p>
       <FormEditor
-        schema={schema}
-        onChange={(formData: any, invalid: boolean): void => {
+        schema={schema as GenericObjectType}
+        onChange={(formData: GenericObjectType, invalid: boolean): void => {
           setMetadata(formData);
           setInvalidForm(invalid);
           setDirty(true);
