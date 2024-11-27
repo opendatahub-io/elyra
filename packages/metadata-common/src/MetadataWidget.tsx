@@ -271,18 +271,18 @@ export class MetadataDisplay<
   };
 
   getActiveTags(): string[] {
-    const tags: string[] = [];
+    const activeTags: string[] = [];
     for (const metadata of this.props.metadata) {
-      const tags = metadata.metadata.tags as string[] | undefined;
-      if (tags) {
-        for (const tag of tags) {
-          if (!tags.includes(tag)) {
-            tags.push(tag);
+      const metadataTags = metadata.metadata.tags as string[] | undefined;
+      if (metadataTags) {
+        for (const tag of metadataTags) {
+          if (!activeTags.includes(tag)) {
+            activeTags.push(tag);
           }
         }
       }
     }
-    return tags;
+    return activeTags;
   }
 
   matchesTags(filterTags: Set<string>, metadata: IMetadataResource): boolean {
