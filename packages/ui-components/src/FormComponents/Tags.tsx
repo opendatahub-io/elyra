@@ -210,7 +210,7 @@ export const TagsField: React.FC<FieldProps> = (props: FieldProps) => {
   const errorSchema = props.errorSchema ?? {};
   if (Object.keys(errorSchema).length > 0) {
     for (const i in props.errorSchema) {
-      for (const err of (props.errorSchema[i] as any)['__errors']) {
+      for (const err of props.errorSchema[i]?.['__errors'] ?? []) {
         errors.push(<li className="text-danger">{err}</li>);
       }
     }

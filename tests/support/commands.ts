@@ -178,7 +178,7 @@ Cypress.Commands.add('openFile', (name: string): void => {
 });
 
 Cypress.Commands.add('bootstrapFile', (name: string): void => {
-  cy.readFile(`tests/assets/${name}`).then((file: any) => {
+  cy.readFile(`tests/assets/${name}`).then((file) => {
     cy.writeFile(`build/cypress-tests/${name}`, file);
   });
 });

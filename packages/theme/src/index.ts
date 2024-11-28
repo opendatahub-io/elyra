@@ -72,7 +72,7 @@ const extension: JupyterFrontEndPlugin<ILauncher> = {
 
     commands.addCommand(CommandIDs.create, {
       label: trans.__('New Launcher'),
-      execute: (args: any) => {
+      execute: (args) => {
         const cwd = args['cwd'] ? String(args['cwd']) : '';
         const id = `launcher-${Private.id++}`;
         const callback = (item: Widget): void => {
@@ -140,7 +140,7 @@ const extension: JupyterFrontEndPlugin<ILauncher> = {
     commands.addCommand(CommandIDs.openHelp, {
       label: 'Documentation',
       icon: helpIcon,
-      execute: (args: any) => {
+      execute: () => {
         window.open('https://elyra.readthedocs.io/en/latest/', '_blank');
       }
     });
@@ -149,7 +149,7 @@ const extension: JupyterFrontEndPlugin<ILauncher> = {
       label: "What's new in latest",
       caption: "What's new in this release",
       icon: whatsNewIcon,
-      execute: (args: any) => {
+      execute: () => {
         window.open(
           'https://github.com/elyra-ai/elyra/releases/latest/',
           '_blank'

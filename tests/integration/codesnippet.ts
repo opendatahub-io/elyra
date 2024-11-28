@@ -198,7 +198,9 @@ describe('Code Snippet tests', () => {
     const updatedSnippetItem = getSnippetByName(newSnippetName);
 
     // Check old snippet name does not exist
-    expect(updatedSnippetItem.innerText).not.to.eq(snippetName);
+    updatedSnippetItem.then((element) => {
+      expect(element.text()).not.to.eq(snippetName);
+    });
 
     // Delete updated code snippet
     deleteSnippet(newSnippetName);
@@ -337,11 +339,13 @@ const openCodeSnippetExtension = (): void => {
   cy.get('.jp-SideBar .lm-mod-current[title="Code Snippets"]');
 };
 
-const getSnippetByName = (snippetName: string): any => {
+const getSnippetByName = (
+  snippetName: string
+): Cypress.Chainable<JQuery<HTMLElement>> => {
   return cy.get(`[data-item-id="${snippetName}"]`);
 };
 
-const createInvalidCodeSnippet = (snippetName: string): any => {
+const createInvalidCodeSnippet = (snippetName: string): void => {
   clickCreateNewSnippetButton();
 
   // Name code snippet
@@ -353,7 +357,7 @@ const createInvalidCodeSnippet = (snippetName: string): any => {
 const populateCodeSnippetFields = (
   snippetName: string,
   language?: string
-): any => {
+): void => {
   clickCreateNewSnippetButton();
 
   // Name code snippet
@@ -372,7 +376,7 @@ const populateCodeSnippetFields = (
 const createValidCodeSnippet = (
   snippetName: string,
   language?: string
-): any => {
+): void => {
   populateCodeSnippetFields(snippetName, language);
 
   saveAndCloseMetadataEditor();
@@ -408,7 +412,9 @@ const duplicateSnippet = (snippetName: string): void => {
   item.find('button[title="Duplicate"]').click();
 };
 
-const getActionButtonsElement = (snippetName: string): any => {
+const getActionButtonsElement = (
+  snippetName: string
+): Cypress.Chainable<JQuery<HTMLElement>> => {
   const actionButtonsElement = getSnippetByName(snippetName).find(
     '.elyra-expandableContainer-action-buttons'
   );
