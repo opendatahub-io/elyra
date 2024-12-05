@@ -139,7 +139,7 @@ export interface IRuntimeComponentInputOutputData {
 }
 
 export interface IRuntimeComponentParameter {
-  filename: string;
+  filename?: string;
   env_vars?: { env_var: string }[];
 }
 

@@ -59,6 +59,7 @@ import { CommandRegistry } from '@lumino/commands';
 import {
   PartialJSONArray,
   PartialJSONObject,
+  PartialJSONValue,
   ReadonlyPartialJSONObject
 } from '@lumino/coreutils';
 import { IDragEvent } from '@lumino/dragdrop';
@@ -407,39 +408,46 @@ const PipelineWrapper: React.FC<
   }, [runtimeDisplayName]);
 
   const onChange = useCallback((pipelineJson: GenericObjectType): void => {
-    const removeNullValues = (
-      data?: PartialJSONObject,
-      removeEmptyString?: boolean
-    ): void => {
+    const isNullOrEmpty = (
+      value: PartialJSONValue | null | undefined
+    ): boolean => value === null || value === undefined || value === '';
+
+    const cleanArray = (arr: PartialJSONArray): PartialJSONArray => {
+      const newArray: PartialJSONArray = [];
+
+      for (const item of arr) {
+        if (isNullOrEmpty(item)) {
+          continue;
+        }
+        if (typeof item === 'object') {
+          const itemCopy = JSON.parse(
+            JSON.stringify(item)
+          ) as PartialJSONObject;
+          removeNullValues(itemCopy);
+          newArray.push(itemCopy);
+        } else {
+          newArray.push(item);
+        }
+      }
+
+      return newArray;
+    };
+
+    const removeNullValues = (data?: PartialJSONObject): void => {
       if (!data) {
         return;
       }
+
       for (const key in data) {
-        if (
-          data[key] === null ||
-          data[key] === undefined ||
-          (removeEmptyString && data[key] === '')
-        ) {
+        const value = data[key];
+        if (isNullOrEmpty(value)) {
           delete data[key];
-        } else if (Array.isArray(data[key])) {
-          const newArray = [];
-          for (const i in data[key] as PartialJSONArray) {
-            const item = (data[key] as PartialJSONArray)[i];
-            if (item === undefined || item === null || item === '') {
-              continue;
-            }
-            if (typeof item === 'object') {
-              removeNullValues(item as PartialJSONObject, true);
-              if (Object.keys(item).length > 0) {
-                newArray.push(item);
-              }
-            } else {
-              newArray.push(item);
-            }
-          }
-          data[key] = newArray;
-        } else if (typeof data[key] === 'object') {
-          removeNullValues(data[key] as PartialJSONObject);
+        } else if (Array.isArray(value)) {
+          data[key] = cleanArray(value);
+        } else if (typeof value === 'object') {
+          const objCopy = JSON.parse(JSON.stringify(value));
+          removeNullValues(objCopy);
+          data[key] = objCopy;
         }
       }
     };
@@ -616,11 +624,11 @@ const PipelineWrapper: React.FC<
   };
 
   const onPropertiesUpdateRequested = async (args: {
-    component_parameters: IRuntimeComponentParameter;
+    component_parameters?: IRuntimeComponentParameter;
   }): Promise<{
-    component_parameters: IRuntimeComponentParameter;
+    component_parameters?: IRuntimeComponentParameter;
   }> => {
-    if (!contextRef.current.path) {
+    if (!contextRef.current.path || !args.component_parameters?.filename) {
       return args;
     }
     const path = PipelineService.getWorkspaceRelativeNodePath(
