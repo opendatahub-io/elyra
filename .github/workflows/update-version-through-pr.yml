@@ -15,7 +15,7 @@ on:
         required: true
 
 env:
-  NODE_VERSION: 20.11.0
+  NODE_VERSION: 22
   YARN_VERSION: 3.5.0
   PYTHON_VERSION: 3.11
 
