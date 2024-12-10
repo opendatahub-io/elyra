@@ -219,6 +219,9 @@ test-server: test-dependencies pytest # Run python unit tests
 test-ui-unit: # Run frontend jest unit tests
 	yarn test:unit
 
+test-instrument: # Prepare code coverage instrumentation
+	yarn lerna run cy:instrument --stream
+
 test-integration: # Run frontend cypress integration tests
 	yarn test:integration
 

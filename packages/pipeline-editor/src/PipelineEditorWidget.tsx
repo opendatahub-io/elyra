@@ -142,7 +142,7 @@ const getAllPaletteNodes = (
     return [];
   }
 
-  const nodes = [];
+  const nodes: IRuntimeComponentNodeType[] = [];
   for (const c of palette.categories) {
     if (c.node_types) {
       nodes.push(...c.node_types);
@@ -282,7 +282,7 @@ const PipelineWrapper: React.FC<
   const runtimeDisplayName = getDisplayName(runtimesSchema, type) ?? 'Generic';
 
   const filePersistedRuntimeImages = useMemo(() => {
-    const images = [];
+    const images: string[] = [];
     const pipelineDefaultRuntimeImage =
       pipeline?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults
         ?.runtime_image;
@@ -665,7 +665,7 @@ const PipelineWrapper: React.FC<
     (componentId: string, componentSource: string) => {
       // Show error dialog if the component does not exist
       if (!componentId) {
-        const dialogBody = [];
+        const dialogBody: string[] = [];
         try {
           const componentSourceJson = JSON.parse(componentSource);
           dialogBody.push(`catalog_type: ${componentSourceJson.catalog_type}`);
