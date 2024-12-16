@@ -32,7 +32,7 @@
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
               "filename": "producer.ipynb",
-              "runtime_image": "continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8"
+              "runtime_image": "continuumio/anaconda3:2024.02-1"
             },
             "ui_data": {
               "label": "producer.ipynb",
@@ -88,7 +88,7 @@
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
               "filename": "consumer.ipynb",
-              "runtime_image": "continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8"
+              "runtime_image": "continuumio/anaconda3:2024.02-1"
             },
             "ui_data": {
               "label": "consumer.ipynb",
@@ -146,7 +146,7 @@
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
               "filename": "../scripts/setup.py",
-              "runtime_image": "continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8"
+              "runtime_image": "continuumio/anaconda3:2024.02-1"
             },
             "ui_data": {
               "label": "setup.py",
@@ -205,7 +205,7 @@
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
               "filename": "create-source-files.py",
-              "runtime_image": "continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8"
+              "runtime_image": "continuumio/anaconda3:2024.02-1"
             },
             "ui_data": {
               "label": "create-source-files.py",
@@ -264,7 +264,7 @@
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
               "filename": "producer-script.py",
-              "runtime_image": "continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8"
+              "runtime_image": "continuumio/anaconda3:2024.02-1"
             },
             "ui_data": {
               "label": "producer-script.py",
