@@ -28,6 +28,7 @@ env:
   PYTHON_VERSION: 3.11
   QUAY_WORKBENCH_IMAGES_REPOSITORY: 'opendatahub/workbench-images'
   QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV: 'jupyter-trustyai-ubi9-python-3.11-20241,cuda-jupyter-tensorflow-ubi9-python-3.11-20241'
+  NODE_OPTIONS: "--max_old_space_size=4096"
 
 jobs:
   prepare-yarn-cache:
@@ -211,9 +212,9 @@ jobs:
         with:
           name: elyra_test_artifacts
           path: |
-            ${{ github.workspace }}/build/cypress-tests/*.log
-            ${{ github.workspace }}/build/cypress-tests/screenshots//**/*
-            ${{ github.workspace }}/build/cypress-tests/videos//**/*
+            ${{ github.workspace }}/build/cypress/*.log
+            ${{ github.workspace }}/build/cypress/screenshots//**/*
+            ${{ github.workspace }}/build/cypress/videos//**/*
             /home/runner/.npm/_logs/*.log
 
   test-documentation-build:
