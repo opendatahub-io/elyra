@@ -385,10 +385,7 @@ describe('Pipeline Editor tests', () => {
           .scrollIntoView()
           .find('select')
           .should('be.visible')
-          .select(
-            'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8',
-            { force: true }
-          );
+          .select('continuumio/anaconda3:2024.02-1', { force: true });
         // Generic Node Defaults > Kubernetes Secrets
         cy.get('#root_pipeline_defaults_kubernetes_secrets')
           .scrollIntoView()
