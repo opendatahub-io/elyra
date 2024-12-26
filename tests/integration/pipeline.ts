@@ -208,7 +208,7 @@ describe('Pipeline Editor tests', () => {
       });
       cy.get('#root_component_parameters_runtime_image').within(() => {
         cy.get('select[id="root_component_parameters_runtime_image"]').select(
-          'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8'
+          'continuumio/anaconda3:2024.02-1'
         );
       });
 
@@ -216,7 +216,7 @@ describe('Pipeline Editor tests', () => {
       cy.findByText('consumer.ipynb').click();
       cy.get('#root_component_parameters_runtime_image').within(() => {
         cy.get('select[id="root_component_parameters_runtime_image"]').select(
-          'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8'
+          'continuumio/anaconda3:2024.02-1'
         );
       });
 
@@ -224,7 +224,7 @@ describe('Pipeline Editor tests', () => {
       cy.findByText('setup.py').click();
       cy.get('#root_component_parameters_runtime_image').within(() => {
         cy.get('select[id="root_component_parameters_runtime_image"]').select(
-          'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8'
+          'continuumio/anaconda3:2024.02-1'
         );
       });
       cy.get('#root_component_parameters_dependencies').within(() => {
@@ -244,7 +244,7 @@ describe('Pipeline Editor tests', () => {
       cy.findByText('create-source-files.py').click();
       cy.get('#root_component_parameters_runtime_image').within(() => {
         cy.get('select[id="root_component_parameters_runtime_image"]').select(
-          'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8'
+          'continuumio/anaconda3:2024.02-1'
         );
       });
       cy.get('#root_component_parameters_outputs').within(() => {
@@ -263,7 +263,7 @@ describe('Pipeline Editor tests', () => {
       cy.findByText('producer-script.py').click();
       cy.get('#root_component_parameters_runtime_image').within(() => {
         cy.get('select[id="root_component_parameters_runtime_image"]').select(
-          'continuumio/anaconda3@sha256:a2816acd3acda208d92e0bf6c11eb41fda9009ea20f24e123dbf84bb4bd4c4b8'
+          'continuumio/anaconda3:2024.02-1'
         );
       });
       cy.get('#root_component_parameters_outputs').within(() => {
