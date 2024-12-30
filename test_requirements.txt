@@ -8,5 +8,6 @@ pytest-console-scripts
 pytest_jupyter
 pytest-tornasync
 pytest_virtualenv
+nbconvert==7.1.0
 requests-mock
 requests-unixsocket
