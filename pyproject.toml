@@ -34,7 +34,7 @@ dependencies = [
     "MarkupSafe>=2.1",
     "minio>=7.0.0,!=7.2.1",
     "nbclient>=0.10.0",
-    "nbconvert>=6.5.1",
+    "nbconvert==7.1.0",  # Ensure compatibility with mistune<3 as `3.1.0` has issues (see https://github.com/lepture/mistune/issues/403)
     "nbdime~=4.0.1",  # Cap from jupyterlab-git
     "nbformat>=5.1.2",
     "networkx>=2.5.1",
