@@ -342,11 +342,11 @@ validate-runtime-image: # Validate that runtime image meets minimum criteria
 			continue; \
 		fi; \
 		if [ $$cmd == "python3" ]; then \
-			IMAGE_PYTHON3_MINOR_VERSION=`docker run --rm --entrypoint /bin/bash $$image -c "$$cmd --version" | cut -d' ' -f2 | cut -d'.' -f2` ; \
-			if [[ $$IMAGE_PYTHON3_MINOR_VERSION -lt 8 ]]; then \
-				echo "WARNING: Container image $$image requires Python 3.8 or greater for latest generic component dependency installation" ; \
+			IMAGE_PYTHON3_MINOR_VERSION=`$(CONTAINER_EXEC) run --rm --entrypoint /bin/bash $$image -c "$$cmd --version" | cut -d' ' -f2 | cut -d'.' -f2` ; \
+			if [[ $$IMAGE_PYTHON3_MINOR_VERSION -lt 9 ]]; then \
+				echo "WARNING: Container image $$image requires Python 3.9 or greater for latest generic component dependency installation" ; \
 				fail=1; \
-			elif [[ $$IMAGE_PYTHON3_MINOR_VERSION -ge 8 ]]; then \
+			elif [[ $$IMAGE_PYTHON3_MINOR_VERSION -ge 9 ]]; then \
 				echo "=> Checking notebook execution..." ; \
 				docker run -v $$(pwd)/etc/generic:/opt/elyra/ --rm --entrypoint /bin/bash $$image -c "python3 -m pip install -r /opt/elyra/requirements-elyra.txt && \
 							   curl https://raw.githubusercontent.com/nteract/papermill/main/papermill/tests/notebooks/simple_execute.ipynb --output simple_execute.ipynb && \
