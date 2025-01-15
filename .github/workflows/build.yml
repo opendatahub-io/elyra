@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2023 Elyra Authors
+# Copyright 2018-2025 Elyra Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,13 +47,11 @@ jobs:
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          yarn --version
-      - name: Install dependencies
-        run: |
-          yarn install
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
   lint-server:
     name: Lint Server
     runs-on: ubuntu-latest
@@ -82,13 +80,11 @@ jobs:
             */*/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          yarn --version
-      - name: Install dependencies
-        run: |
-          make yarn-install
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
       - name: Lint
         run: make eslint-check-ui
       - name: Check format
@@ -99,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10', '3.11']
+        python-version: [3.9, '3.10', '3.11']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -147,14 +143,14 @@ jobs:
             */*/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          yarn --version
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
       - name: Build
         run: |
           make build-dependencies
-          make yarn-install
           make build-ui-prod
       - name: Install
         run: make install-server
@@ -185,14 +181,14 @@ jobs:
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          yarn --version
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
       - name: Build
         run: |
           make build-dependencies
-          make yarn-install
           make test-instrument
           make build-ui-prod
       - name: Install
@@ -234,7 +230,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10', '3.11']
+        python-version: [3.9, '3.10', '3.11']
     steps:
       - uses: actions/checkout@v4
       - name: Validate image environment
@@ -270,10 +266,9 @@ jobs:
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          yarn --version
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
       - name: Check whether to build container images
         id: should-build-images
         run: |
@@ -282,6 +277,8 @@ jobs:
         if: steps.should-build-images.outputs.result == 'true'
         run: |
           ./.github/workflows/scripts/free_gha_space.sh
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
       - name: Build
         run: |
           make install-prod

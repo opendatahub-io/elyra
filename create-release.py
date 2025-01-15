@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2018-2023 Elyra Authors
+# Copyright 2018-2025 Elyra Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ def validate_dependencies() -> None:
     if not dependency_exists("git"):
         raise DependencyException("Please install git https://git-scm.com/downloads")
     if not dependency_exists("node"):
-        raise DependencyException("Please install node.js 18+ https://nodejs.org/")
+        raise DependencyException("Please install Node.js 22 https://nodejs.org/")
     if not dependency_exists("yarn"):
         raise DependencyException("Please install yarn https://classic.yarnpkg.com/")
     if not dependency_exists("twine"):

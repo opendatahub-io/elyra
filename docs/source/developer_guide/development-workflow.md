@@ -1,6 +1,6 @@
 <!--
 {% comment %}
-Copyright 2018-2023 Elyra Authors
+Copyright 2018-2025 Elyra Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ This section describes the steps necessary to build Elyra in a development envir
 #### Requirements
 
 * [Python 3 Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-* [Node.js 18+](https://nodejs.org/en/)
+* [Node.js 22](https://nodejs.org/en/)
 * [Yarn](https://yarnpkg.com/lang/en/docs/install)
 * [GNU Make](https://www.gnu.org/software/make/)
 

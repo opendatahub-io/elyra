@@ -1,6 +1,5 @@
 #
-#
-# Copyright 2018-2023 Elyra Authors
+# Copyright 2018-2025 Elyra Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -617,7 +616,7 @@ class OpUtil(object):
     @classmethod
     def determine_elyra_requirements(cls) -> Any:
         if sys.version_info.major == 3:
-            if sys.version_info.minor in [8, 9, 10, 11]:
+            if sys.version_info.minor in [9, 10, 11]:
                 return "requirements-elyra.txt"
         logger.error(
             f"This version of Python '{sys.version_info.major}.{sys.version_info.minor}' "

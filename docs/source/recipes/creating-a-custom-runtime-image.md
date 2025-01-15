@@ -1,6 +1,6 @@
 <!--
 {% comment %}
-Copyright 2018-2023 Elyra Authors
+Copyright 2018-2025 Elyra Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -90,6 +90,11 @@ The [Elyra `Makefile`](https://github.com/elyra-ai/elyra/blob/main/Makefile) inc
    ```bash
    $ make validate-runtime-image image=my-runtime-image
    ```
+   If using `podman`, ensure the following environmental variables are set prior to running the release script:
+```bash
+    CONTAINER_EXEC=podman
+    CONTAINER_OUTPUT_OPTION="--format docker"
+```
 
    If no problems were detected the output should look as follows:
 
