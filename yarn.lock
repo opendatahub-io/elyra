@@ -3199,6 +3199,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@elyra/code-viewer-extension@workspace:packages/code-viewer":
+  version: 0.0.0-use.local
+  resolution: "@elyra/code-viewer-extension@workspace:packages/code-viewer"
+  dependencies:
+    "@jupyterlab/application": ^4.2.5
+    "@jupyterlab/apputils": ^4.2.5
+    "@jupyterlab/builder": ^4.2.5
+    "@jupyterlab/codeeditor": ^4.2.5
+    "@jupyterlab/ui-components": ^4.2.5
+    "@lumino/algorithm": "*"
+    "@lumino/widgets": ^2.3.1
+    rimraf: ~5.0.5
+    typescript: ~5.1.6
+  languageName: unknown
+  linkType: soft
+
 "@elyra/metadata-common@0.0.0-dev, @elyra/metadata-common@workspace:packages/metadata-common":
   version: 0.0.0-use.local
   resolution: "@elyra/metadata-common@workspace:packages/metadata-common"
@@ -3344,6 +3360,52 @@ __metadata:
 "@elyra/python-editor-extension@workspace:packages/python-editor":
   version: 0.0.0-use.local
   resolution: "@elyra/python-editor-extension@workspace:packages/python-editor"
+  dependencies:
+    "@elyra/script-editor": 0.0.0-dev
+    "@elyra/ui-components": 0.0.0-dev
+    "@jupyterlab/application": ^4.2.5
+    "@jupyterlab/apputils": ^4.2.5
+    "@jupyterlab/builder": ^4.2.5
+    "@jupyterlab/codeeditor": ^4.2.5
+    "@jupyterlab/docregistry": ^4.2.5
+    "@jupyterlab/filebrowser": ^4.2.5
+    "@jupyterlab/fileeditor": ^4.2.5
+    "@jupyterlab/launcher": ^4.2.5
+    "@jupyterlab/mainmenu": ^4.2.5
+    "@jupyterlab/settingregistry": ^4.2.5
+    "@jupyterlab/ui-components": ^4.2.5
+    "@lumino/coreutils": ^2.1.2
+    rimraf: ~5.0.5
+    typescript: ~5.1.6
+  languageName: unknown
+  linkType: soft
+
+"@elyra/r-editor-extension@workspace:packages/r-editor":
+  version: 0.0.0-use.local
+  resolution: "@elyra/r-editor-extension@workspace:packages/r-editor"
+  dependencies:
+    "@elyra/script-editor": 0.0.0-dev
+    "@elyra/ui-components": 0.0.0-dev
+    "@jupyterlab/application": ^4.2.5
+    "@jupyterlab/apputils": ^4.2.5
+    "@jupyterlab/builder": ^4.2.5
+    "@jupyterlab/codeeditor": ^4.2.5
+    "@jupyterlab/docregistry": ^4.2.5
+    "@jupyterlab/filebrowser": ^4.2.5
+    "@jupyterlab/fileeditor": ^4.2.5
+    "@jupyterlab/launcher": ^4.2.5
+    "@jupyterlab/mainmenu": ^4.2.5
+    "@jupyterlab/settingregistry": ^4.2.5
+    "@jupyterlab/ui-components": ^4.2.5
+    "@lumino/coreutils": ^2.1.2
+    rimraf: ~5.0.5
+    typescript: ~5.1.6
+  languageName: unknown
+  linkType: soft
+
+"@elyra/scala-editor-extension@workspace:packages/scala-editor":
+  version: 0.0.0-use.local
+  resolution: "@elyra/scala-editor-extension@workspace:packages/scala-editor"
   dependencies:
     "@elyra/script-editor": 0.0.0-dev
     "@elyra/ui-components": 0.0.0-dev
