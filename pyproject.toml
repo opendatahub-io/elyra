@@ -95,6 +95,11 @@ kfp-examples = [
 gitlab = [
     "python-gitlab"
 ]
+# Airflow is not part of ODH distribution
+# airflow = []
+# airflow-gitlab = [
+#     "python-gitlab"
+# ]
 # The following is a collection of "non-test" extra dependencies from above.
 all = [
     "elyra-examples-kfp-catalog",
@@ -120,16 +125,24 @@ runtimes = "elyra.metadata.schemasproviders:RuntimesSchemas"
 runtimes-images = "elyra.metadata.schemasproviders:RuntimeImagesSchemas"
 code-snippets = "elyra.metadata.schemasproviders:CodeSnippetsSchemas"
 component-catalogs = "elyra.metadata.schemasproviders:ComponentCatalogsSchemas"
+# Airflow is not part of ODH distribution
+# airflow-provider-package-catalog-schema = "elyra.pipeline.airflow.provider_package_catalog_connector.airflow_provider_package_schema_provider:AirflowProviderPackageSchemasProvider"
+# airflow-package-catalog-schema = "elyra.pipeline.airflow.package_catalog_connector.airflow_package_schema_provider:AirflowPackageSchemasProvider"
 metadata-tests = "elyra.tests.metadata.test_utils:MetadataTestSchemasProvider"
 
 [project.entry-points."elyra.pipeline.processors"]
 local = "elyra.pipeline.local.processor_local:LocalPipelineProcessor"
+# Airflow is not part of ODH distribution
+# airflow = "elyra.pipeline.airflow.airflow_processor:AirflowPipelineProcessor"
 kfp = "elyra.pipeline.kfp.processor_kfp:KfpPipelineProcessor"
 
 [project.entry-points."elyra.component.catalog_types"]
 url-catalog = "elyra.pipeline.catalog_connector:UrlComponentCatalogConnector"
 local-file-catalog = "elyra.pipeline.catalog_connector:FilesystemComponentCatalogConnector"
 local-directory-catalog = "elyra.pipeline.catalog_connector:DirectoryComponentCatalogConnector"
+# Airflow is not part of ODH distribution
+# airflow-provider-package-catalog = "elyra.pipeline.airflow.provider_package_catalog_connector.airflow_provider_package_catalog_connector:AirflowProviderPackageCatalogConnector"
+# airflow-package-catalog = "elyra.pipeline.airflow.package_catalog_connector.airflow_package_catalog_connector:AirflowPackageCatalogConnector"
 
 [project.entry-points."papermill.engine"]
 ElyraEngine = "elyra.pipeline.elyra_engine:ElyraEngine"
@@ -176,6 +189,8 @@ ignore-vcs = true
 "etc/config/metadata/component-catalogs" = "share/jupyter/metadata/component-catalogs"
 "etc/config/components" = "share/jupyter/components"
 "etc/config/components/kfp" = "share/jupyter/components/kfp/"
+# Airflow is not part of ODH distribution
+# "etc/config/components/airflow" = "share/jupyter/components/airflow/"
 
 # Specify which files to include and exclude in source distribution
 [tool.hatch.build.targets.sdist]

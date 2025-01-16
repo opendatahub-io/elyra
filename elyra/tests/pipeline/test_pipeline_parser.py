@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from conftest import AIRFLOW_TEST_OPERATOR_CATALOG
 import pytest
 
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline import GenericOperation
 from elyra.pipeline.pipeline_constants import ENV_VARIABLES
+from elyra.pipeline.pipeline_constants import MOUNTED_VOLUMES
 from elyra.pipeline.properties import ElyraPropertyList
 from elyra.pipeline.properties import EnvironmentVariable
 from elyra.tests.pipeline.util import _read_pipeline_resource
@@ -246,3 +248,23 @@ def test_missing_operation_image():
         PipelineParser().parse(pipeline_json)
 
     assert "Missing field 'operation runtime image'" in str(e.value)
+
+
+@pytest.mark.parametrize("catalog_instance", [AIRFLOW_TEST_OPERATOR_CATALOG], indirect=True)
+@pytest.mark.skip(reason="Airflow is not part of ODH distribution")
+def test_custom_component_parsed_properties(monkeypatch, catalog_instance):
+    pipeline_json = _read_pipeline_resource("resources/sample_pipelines/pipeline_with_airflow_components.json")
+    parsed_pipeline = PipelineParser().parse(pipeline_json)
+
+    operation_id = "bb9473ca-12ec-0472-a36a-45bd2a1f6dc1"
+    custom_op = parsed_pipeline.operations[operation_id]
+
+    # Ensure this operation's component params does not include the empty mounted volumes list
+    assert custom_op.elyra_props.get(MOUNTED_VOLUMES) == []
+
+    operation_id = "bb9606ca-29ec-4133-a36a-67bd2a1f6dc3"
+    custom_op = parsed_pipeline.operations[operation_id]
+
+    # Ensure this operation's component params includes the value for the component-defined mounted volumes property
+    assert custom_op.component_props_as_dict.get(MOUNTED_VOLUMES)["value"] == "a component-defined property"
+    assert custom_op.elyra_props.get(MOUNTED_VOLUMES) is None

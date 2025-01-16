@@ -72,6 +72,10 @@ describe('Pipeline Editor tests', () => {
     cy.exec('elyra-metadata remove runtimes --name=kfp_test_runtime', {
       failOnNonZeroExit: false
     });
+    // Airflow is not part of ODH distribution
+    // cy.exec('elyra-metadata remove runtimes --name=airflow_test_runtime', {
+    //   failOnNonZeroExit: false
+    // });
 
     // delete example catalogs used for testing
     cy.exec(
@@ -496,9 +500,15 @@ describe('Pipeline Editor tests', () => {
     // Create kfp runtime configuration
     cy.createRuntimeConfig({ type: 'kfp' });
 
+    // Create airflow runtime configuration
+    // Airflow is not part of ODH distribution
+    // cy.createRuntimeConfig({ type: 'airflow' });
+
     // validate runtimes are now available
     cy.get('#elyra-metadata\\:runtimes').within(() => {
       cy.findByText(/kfp test runtime/i).should('exist');
+      // Airflow is not part of ODH distribution
+      // cy.findByText(/airflow test runtime/i).should('exist');
     });
   });
 
@@ -656,6 +666,44 @@ describe('Pipeline Editor tests', () => {
     cy.readFile('build/cypress/generic-test.py');
   });
 
+  it.skip('should export Airflow pipeline as python dsl (Airflow is not part of ODH distribution)', () => {
+    // Install runtime configuration
+    cy.installRuntimeConfig({ type: 'airflow' });
+
+    cy.openFile('generic-test.pipeline');
+
+    // try to export valid pipeline
+    cy.findByRole('button', { name: /export pipeline/i }).click();
+
+    // check label for generic pipeline
+    cy.get('.jp-Dialog-header').contains('Export pipeline');
+
+    cy.findByLabelText(/runtime platform/i).select('APACHE_AIRFLOW');
+
+    cy.findByLabelText(/runtime configuration/i)
+      .select('airflow_test_runtime')
+      .should('have.value', 'airflow_test_runtime');
+
+    // overwrite existing genric-test.py file
+    cy.findByLabelText(/export pipeline as/i)
+      .select('Airflow domain-specific language Python code')
+      .should('have.value', 'py');
+
+    cy.findByLabelText(/replace if file already exists/i)
+      .check()
+      .should('be.checked');
+
+    // actual export requires minio
+    cy.contains('Ok').click();
+
+    // validate job was executed successfully, this can take a while in ci
+    cy.findByText(/pipeline export succeeded/i, { timeout: 30000 }).should(
+      'be.visible'
+    );
+
+    cy.readFile('build/cypress/helloworld.py');
+  });
+
   it('should export pipeline with custom filename', () => {
     // Install runtime configuration
     cy.installRuntimeConfig({ type: 'kfp' });
@@ -768,9 +816,63 @@ describe('Pipeline Editor tests', () => {
     cy.findByRole('button', { name: /cancel/i }).click();
   });
 
+  it.skip('airflow pipeline should display expected export options (Airflow is not part of ODH distribution)', () => {
+    cy.createPipeline({ type: 'airflow', emptyPipeline });
+    cy.savePipeline();
+
+    cy.installRuntimeConfig({ type: 'airflow' });
+
+    // Validate all export options are available
+    cy.findByRole('button', { name: /export pipeline/i }).click();
+    cy.findByRole('option', { name: /python/i }).should('have.value', 'py');
+    cy.findByRole('option', { name: /yaml/i }).should('not.exist');
+
+    // Dismiss dialog
+    cy.findByRole('button', { name: /cancel/i }).click();
+  });
+
+  //error dialog tests
+  it.skip('saving runtime config with missing required fields should error (Airflow is not part of ODH distribution)', () => {
+    cy.createRuntimeConfig({ type: 'invalid' });
+    cy.get('.jp-Dialog-header').contains('Error making request');
+
+    // Dismiss dialog
+    cy.findByRole('button', { name: /ok/i }).click();
+  });
+
+  it.skip('exporting generic pipeline with invalid runtime config should produce request error (Airflow is not part of ODH distribution)', () => {
+    cy.createPipeline({ emptyPipeline });
+    cy.savePipeline();
+
+    cy.installRuntimeConfig();
+
+    cy.findByRole('button', { name: /export pipeline/i }).click();
+
+    cy.contains('Ok').click();
+
+    cy.get('.jp-Dialog-header').contains('Error making request');
+
+    // Dismiss dialog
+    cy.findByRole('button', { name: /ok/i }).click();
+  });
+
   it('generic pipeline should display expected export options', () => {
     cy.createPipeline({ emptyPipeline });
     cy.savePipeline();
+
+    // Airflow is not part of ODH distribution
+    // Test Airflow export options
+    // cy.installRuntimeConfig({ type: 'airflow' });
+
+    // cy.findByRole('button', { name: /export pipeline/i }).click();
+
+    // // Validate all export options are available for airflow
+    // cy.findByLabelText(/runtime platform/i).select('APACHE_AIRFLOW');
+    // cy.findByRole('option', { name: /python/i }).should('have.value', 'py');
+    // cy.findByRole('option', { name: /yaml/i }).should('not.exist');
+
+    // // Dismiss dialog
+    // cy.findByRole('button', { name: /cancel/i }).click();
 
     // Test KFP export options
     cy.installRuntimeConfig({ type: 'kfp' });
@@ -794,6 +896,11 @@ describe('Pipeline Editor tests', () => {
   it('kfp pipeline toolbar should display expected runtime', () => {
     cy.createPipeline({ type: 'kfp' });
     cy.get('.toolbar-icon-label').contains(/runtime: data science pipelines/i);
+  });
+
+  it.skip('airflow pipeline toolbar should display expected runtime (Airflow is not part of ODH distribution)', () => {
+    cy.createPipeline({ type: 'airflow' });
+    cy.get('.toolbar-icon-label').contains(/runtime: apache airflow/i);
   });
 
   it('should block unsupported files', () => {
