@@ -30,7 +30,7 @@ These dependencies are in addition to any dependencies you wish to include in th
 
 ## Runtime dependencies
 
-When using Elyra's features to [build, export, or run pipelines](../user_guide/pipelines.md), additional runtime dependencies must be accessible in the environment where JupyterLab is installed and the Kubernetes cluster where the pipeline runtime environment (Kubeflow Pipelines or Apache Airflow) is installed. 
+When using Elyra's features to [build, export, or run pipelines](../user_guide/pipelines.md), additional runtime dependencies must be accessible in the environment where JupyterLab is installed and the Kubernetes cluster where the pipeline runtime environment (Kubeflow Pipelines or Apache Airflow) is installed.
 
 ![runtime dependencies](../images/recipes/running-elyra-in-air-gapped-environment/runtime-dependencies.png)
 
@@ -39,9 +39,9 @@ In the chart above the arrows indicate whether read access, write access, or bot
 ### JupyterLab environment dependencies
 
 Elyra requires access to the following dependencies when you build, export, or submit a pipeline:
-- **Runtime environment**: Elyra requires access to the Kubernetes cluster where Kubeflow Pipelines or Apache Airflow is running. 
+- **Runtime environment**: Elyra requires access to the Kubernetes cluster where Kubeflow Pipelines or Apache Airflow is running.
 - **GitHub repository or GitLab project:** For Apache Airflow Elyra requires access to the GitHub repository or GitLab project that is configured in the [runtime configuration](../user_guide/runtime-conf.html#git-type-git-type).
-- **Component definitions for [custom components](../user_guide/pipeline-components.html#custom-components)**: Elyra utilizes [catalog connectors](../user_guide/pipeline-components.html#component-catalogs) to locate and load component definitions. The connectors must be able to communicate with the configured catalog, or you will not be able to submit or export pipelines. For example, if a pipeline utilizes a component that is stored in a URL component catalog, the component's URL must be accessible via an anonymous HTTP request.  
+- **Component definitions for [custom components](../user_guide/pipeline-components.html#custom-components)**: Elyra utilizes [catalog connectors](../user_guide/pipeline-components.html#component-catalogs) to locate and load component definitions. The connectors must be able to communicate with the configured catalog, or you will not be able to submit or export pipelines. For example, if a pipeline utilizes a component that is stored in a URL component catalog, the component's URL must be accessible via an anonymous HTTP request.
 - **S3-compatible cloud storage for [generic components](../user_guide/pipeline-components.html#generic-components)**: During pipeline [export](../user_guide/pipelines.html#exporting-pipelines) or [submission](../user_guide/pipelines.html#running-pipelines) Elyra uploads pipeline artifacts to an S3 bucket. These artifacts are downloaded to the pipeline runtime environment when the pipeline is executed.
 
 ### Runtime environment dependencies
@@ -63,7 +63,7 @@ During pipeline execution in the Kubeflow Pipelines or Apache Airflow environmen
     - For Apache Airflow:
         - `ELYRA_BOOTSTRAP_SCRIPT_URL` (URL of `.../elyra/airflow/bootstrapper.py`)
         - `ELYRA_REQUIREMENTS_URL` (URL of `.../etc/generic/requirements-elyra.txt`)
-    
+
   Alternatively, for Kubeflow Pipeline users can store the bootstrapper.py, pip.conf and requirements-elyra.txt files in the runtime container itself, so it could be used without having to set the above variables. The path to these files needs to be configured, so Elyra execution can pick it up.
-    - `ELYRA_FILE_BASE_PATH` (default `/opt/app-root/bin/utils`) 
+    - `ELYRA_FILE_BASE_PATH` (default `/opt/app-root/bin/utils`)
 - **S3-compatible cloud storage for [generic components](../user_guide/pipeline-components.html#generic-components)**: When processing pipeline nodes that are implemented using [generic components](../user_guide/pipeline-components.html#generic-components), Elyra downloads the pipeline artifacts that were uploaded when the pipeline was exported or submitted.

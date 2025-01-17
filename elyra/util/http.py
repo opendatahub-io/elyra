@@ -61,9 +61,9 @@ class HttpErrorMixin(object):
                     if isinstance(exception.args[0], Exception):
                         reply["message"] = (
                             f"Error. The server sent an invalid response.\
-                            \nPlease open an issue and provide this error message,\
-                            any error details, and any related JupyterLab log messages.\
-                            \n\nError found:\n{str(exception.args[0])}"
+                                \nPlease open an issue and provide this error message,\
+                                any error details, and any related JupyterLab log messages.\
+                                \n\nError found:\n{str(exception.args[0])}"
                         )
                     else:
                         reply["message"] = str(exception.args[0])
