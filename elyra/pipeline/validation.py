@@ -299,8 +299,8 @@ class PipelineValidationManager(SingletonConfigurable):
         Checks that the pipeline payload is compatible with this version of elyra (ISSUE #938)
         as well as verifying all nodes in the pipeline are supported by the runtime
         :param pipeline_definition: the pipeline definition to be validated
-        :param pipeline_type: type of the pipeline runtime being used e.g. KUBEFLOW_PIPELINES, generic
-        :param pipeline_runtime: name of the pipeline runtime for execution  e.g. kfp, local
+        :param pipeline_type: type of the pipeline runtime being used e.g. KUBEFLOW_PIPELINES, APACHE_AIRFLOW, generic
+        :param pipeline_runtime: name of the pipeline runtime for execution  e.g. kfp, airflow, local
         :param response: ValidationResponse containing the issue list to be updated
         """
 
@@ -380,8 +380,8 @@ class PipelineValidationManager(SingletonConfigurable):
         Validates each of the node's structure for required fields/properties as well as
         their values
         :param pipeline_definition: the pipeline definition to be validated
-        :param pipeline_type: name of the pipeline runtime being used e.g. kfp, generic
-        :param pipeline_runtime: name of the pipeline runtime for execution  e.g. kfp, local
+        :param pipeline_type: name of the pipeline runtime being used e.g. kfp, airflow, generic
+        :param pipeline_runtime: name of the pipeline runtime for execution  e.g. kfp, airflow, local
         :param response: ValidationResponse containing the issue list to be updated
         """
         if pipeline_runtime:

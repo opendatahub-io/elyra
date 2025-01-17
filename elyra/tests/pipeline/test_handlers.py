@@ -203,7 +203,7 @@ async def test_runtime_types_resources(jp_fetch):
     runtime_types = resources["runtime_types"]
     assert len(runtime_types) >= 1  # We should have Local for sure
     for runtime_type_resources in runtime_types:
-        assert runtime_type_resources.get("id") in ["LOCAL", "KUBEFLOW_PIPELINES", "ARGO"]
+        assert runtime_type_resources.get("id") in ["LOCAL", "KUBEFLOW_PIPELINES", "APACHE_AIRFLOW", "ARGO"]
 
         # Acquire corresponding instance and compare that results are the same
         runtime_type = RuntimeProcessorType.get_instance_by_name(runtime_type_resources.get("id"))
@@ -251,6 +251,8 @@ async def test_malformed_refresh(jp_fetch):
 
 
 async def test_get_pipeline_properties_definition(jp_fetch):
+    # Airflow is not part of ODH distribution
+    # runtime_list = ["kfp", "airflow", "local"]
     runtime_list = ["kfp", "local"]
 
     for runtime in runtime_list:
@@ -328,6 +330,8 @@ async def test_validation_handler(jp_fetch, monkeypatch):
 
 async def test_get_pipeline_parameters_schema(jp_fetch, caplog):
     # Ensure all valid components can be found
+    # Airflow is not part of ODH distribution
+    # unsupported_runtime_types = [RuntimeProcessorType.LOCAL, RuntimeProcessorType.APACHE_AIRFLOW]
     unsupported_runtime_types = [RuntimeProcessorType.LOCAL]
     for runtime_type in unsupported_runtime_types:
         with pytest.raises(HTTPClientError) as e:

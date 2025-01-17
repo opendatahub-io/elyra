@@ -32,6 +32,10 @@ describe('Elyra launcher is in use', () => {
       '.jp-LauncherCard[data-category="Elyra"][title="Generic Pipeline Editor"]:visible'
     );
     // One specific runtime pipeline editor extension is available
+    // Airflow is not part of ODH distribution
+    // cy.get(
+    //   '.jp-LauncherCard[data-category="Elyra"][title="Apache Airflow Pipeline Editor"]:visible'
+    // );
     cy.get(
       '.jp-LauncherCard[data-category="Elyra"][title="Data Science Pipeline Editor"]:visible'
     );
@@ -39,6 +43,10 @@ describe('Elyra launcher is in use', () => {
     cy.get(
       '.jp-LauncherCard[data-category="Elyra"][title="Create a new Python Editor"]:visible'
     );
+    // R Editor is not part of ODH distribution
+    // cy.get(
+    //   '.jp-LauncherCard[data-category="Elyra"][title="Create a new R Editor"]:visible'
+    // );
     // Documentation link is available
     cy.get(
       '.jp-LauncherCard[data-category="Elyra"][title="Documentation"]:visible'

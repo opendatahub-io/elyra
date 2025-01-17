@@ -297,6 +297,9 @@ def processor_registry(monkeypatch, expected_runtimes) -> PipelineProcessorRegis
     "expected_runtimes",
     [
         ["local"],
+        # Airflow is not part of ODH distribution
+        # ["airflow", "kfp"],
+        # ["local", "airflow"],
         ["kfp"],
         ["local"],
         None,
@@ -304,6 +307,8 @@ def processor_registry(monkeypatch, expected_runtimes) -> PipelineProcessorRegis
 )
 def test_processor_registry_filtering(expected_runtimes, processor_registry):
     if expected_runtimes is None:
+        # Airflow is not part of ODH distribution
+        # expected_runtimes = ["local", "kfp", "airflow"]
         expected_runtimes = ["local", "kfp"]
     runtimes = processor_registry.get_all_processors()
     assert len(runtimes) == len(expected_runtimes)

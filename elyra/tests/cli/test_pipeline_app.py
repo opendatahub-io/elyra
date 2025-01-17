@@ -64,6 +64,25 @@ def kubeflow_pipelines_runtime_instance():
     md_mgr.remove(runtime_instance.name)
 
 
+@pytest.fixture
+def airflow_runtime_instance():
+    """Creates an airflow RTC and removes it after test."""
+    instance_name = "valid_airflow_test_config"
+    instance_config_file = Path(__file__).parent / "resources" / "runtime_configs" / f"{instance_name}.json"
+    with open(instance_config_file, "r") as fd:
+        instance_config = json.load(fd)
+
+    md_mgr = MetadataManager(schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID)
+    # clean possible orphaned instance...
+    try:
+        md_mgr.remove(instance_name)
+    except Exception:
+        pass
+    runtime_instance = md_mgr.create(instance_name, Metadata(**instance_config))
+    yield runtime_instance.name
+    md_mgr.remove(runtime_instance.name)
+
+
 def test_no_opts():
     """Verify that all commands are displayed in help"""
     runner = CliRunner()
@@ -1023,6 +1042,43 @@ def test_export_invalid_runtime_config():
     assert f"No such instance named '{config_name}' was found in the runtimes schemaspace." in result.output
 
 
+@pytest.mark.skip(reason="Airflow is not part of ODH distribution")
+def test_export_incompatible_runtime_config(kubeflow_pipelines_runtime_instance, airflow_runtime_instance):
+    """
+    Test user error scenarios: the specified runtime configuration is not compatible
+    with the pipeline type, e.g. KFP pipeline with Airflow runtime config
+    """
+    runner = CliRunner()
+
+    # try exporting a KFP pipeline using an Airflow runtime configuration
+    pipeline_file = "kubeflow_pipelines.pipeline"
+    p = Path(__file__).parent / "resources" / "pipelines" / f"{pipeline_file}"
+    assert p.is_file()
+
+    # try export using Airflow runtime configuration
+    result = runner.invoke(pipeline, ["export", str(p), "--runtime-config", airflow_runtime_instance])
+
+    assert result.exit_code != 0, result.output
+    assert (
+        "The runtime configuration type 'APACHE_AIRFLOW' does not "
+        "match the pipeline's runtime type 'KUBEFLOW_PIPELINES'." in result.output
+    )
+
+    # try exporting an Airflow pipeline using a Kubeflow Pipelines runtime configuration
+    pipeline_file = "airflow.pipeline"
+    p = Path(__file__).parent / "resources" / "pipelines" / f"{pipeline_file}"
+    assert p.is_file()
+
+    # try export using KFP runtime configuration
+    result = runner.invoke(pipeline, ["export", str(p), "--runtime-config", kubeflow_pipelines_runtime_instance])
+
+    assert result.exit_code != 0, result.output
+    assert (
+        "The runtime configuration type 'KUBEFLOW_PIPELINES' does not "
+        "match the pipeline's runtime type 'APACHE_AIRFLOW'." in result.output
+    )
+
+
 @pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)
 @pytest.mark.skip(
     reason="This test is not compatible with KFP v2: It relies on incompatible assets from elyra-examples-kfp-catalog lib. See https://github.com/elyra-ai/examples/issues/115 and https://github.com/opendatahub-io/elyra-examples/pull/1"  # noqa: E501
@@ -1093,6 +1149,90 @@ def test_export_kubeflow_output_option(
         assert f"was exported to '{str(expected_output_file)}" in result.output, result.output
 
 
+@pytest.mark.skip(reason="Airflow is not part of ODH distribution")
+def test_export_airflow_output_option(airflow_runtime_instance):
+    """Verify that the '--output' option works as expected for Airflow"""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        cwd = Path.cwd().resolve()
+        # copy pipeline file and depencencies
+        prepare_export_work_dir(str(cwd), Path(__file__).parent / "resources" / "pipelines")
+        pipeline_file = "airflow.pipeline"
+        pipeline_file_path = cwd / pipeline_file
+        # make sure the pipeline file exists
+        assert pipeline_file_path.is_file() is True
+
+        #
+        # Test: '--output' not specified; exported file is created
+        # in current directory and named like the pipeline file with
+        # a '.py' suffix
+        #
+        expected_output_file = pipeline_file_path.with_suffix(".py")
+        do_mock_export(str(expected_output_file))
+
+        # this should fail: default output file already exists
+        result = runner.invoke(
+            pipeline, ["export", str(pipeline_file_path), "--runtime-config", airflow_runtime_instance]
+        )
+
+        assert result.exit_code != 0, result.output
+        assert (
+            f"Error: Output file '{expected_output_file}' exists and option '--overwrite' "
+            "was not specified." in result.output
+        ), result.output
+
+        #
+        # Test: '--output' specified and ends with '.py' (the value is treated
+        #       as a file name)
+        #
+        expected_output_file = cwd / "test-dir-2" / "output.py"
+        do_mock_export(str(expected_output_file))
+
+        # this should fail: specified output file already exists
+        result = runner.invoke(
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                airflow_runtime_instance,
+                "--output",
+                str(expected_output_file),
+            ],
+        )
+        assert result.exit_code != 0, result.output
+        assert (
+            f"Error: Output file '{expected_output_file}' exists and option '--overwrite' "
+            "was not specified." in result.output
+        ), result.output
+
+        #
+        # Test: '--output' specified and does not end with '.py' (the value
+        #       is treated as a directory)
+        #
+        output_dir = cwd / "test-dir-3"
+        expected_output_file = output_dir / Path(pipeline_file).with_suffix(".py")
+        do_mock_export(str(expected_output_file))
+
+        # this should fail: specified output file already exists
+        result = runner.invoke(
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                airflow_runtime_instance,
+                "--output",
+                str(output_dir),
+            ],
+        )
+        assert result.exit_code != 0, result.output
+        assert (
+            f"Error: Output file '{expected_output_file}' exists and option '--overwrite' "
+            "was not specified." in result.output
+        ), result.output
+
+
 @pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)
 @pytest.mark.skip(
     reason="This test is not compatible with KFP v2: It relies on incompatible assets from elyra-examples-kfp-catalog lib. See https://github.com/elyra-ai/examples/issues/115 and https://github.com/opendatahub-io/elyra-examples/pull/1"  # noqa: E501
@@ -1145,6 +1285,49 @@ def test_export_kubeflow_overwrite_option(
 
         assert result.exit_code == 0, result.output
         assert f"was exported to '{str(expected_output_file)}" in result.output, result.output
+
+
+@pytest.mark.skip(reason="Airflow is not part of ODH distribution")
+def test_export_airflow_format_option(airflow_runtime_instance):
+    """Verify that the '--format' option works as expected for Airflow"""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        cwd = Path.cwd().resolve()
+        # copy pipeline file and depencencies
+        resource_dir = Path(__file__).parent / "resources" / "pipelines"
+        copy_to_work_dir(str(cwd), [resource_dir / "airflow.pipeline", resource_dir / "hello.ipynb"])
+        pipeline_file = "airflow.pipeline"
+        pipeline_file_path = cwd / pipeline_file
+        # make sure the pipeline file exists
+        assert pipeline_file_path.is_file() is True
+
+        # Try supported formats
+        for supported_export_format_value in ["yaml", "py"]:
+            if supported_export_format_value:
+                expected_output_file = pipeline_file_path.with_suffix(f".{supported_export_format_value}")
+            else:
+                expected_output_file = pipeline_file_path.with_suffix(".py")
+
+            # Make sure the output file doesn't exist yet
+            if expected_output_file.is_file():
+                expected_output_file.unlink()
+
+        # Try invalid format
+        for invalid_export_format_value in ["humpty", "dumpty"]:
+            options = [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                airflow_runtime_instance,
+                "--format",
+                invalid_export_format_value,
+            ]
+
+            # this should fail
+            result = runner.invoke(pipeline, options)
+
+            assert result.exit_code == 2, result.output
+            assert "Invalid value for --format: Valid export formats are ['py']." in result.output, result.output
 
 
 @pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)

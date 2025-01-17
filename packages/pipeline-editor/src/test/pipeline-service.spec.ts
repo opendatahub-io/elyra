@@ -34,6 +34,12 @@ describe('@elyra/pipeline-editor', () => {
     describe('#getRuntimeTypes', () => {
       it('should get runtimes ordered by id', async () => {
         const runtime_types = await PipelineService.getRuntimeTypes();
+        // Airflow is not part of ODH distribution
+        // const expected_runtime_ids = [
+        //   'APACHE_AIRFLOW',
+        //   'KUBEFLOW_PIPELINES',
+        //   'LOCAL'
+        // ];
         const expected_runtime_ids = ['KUBEFLOW_PIPELINES', 'LOCAL'];
         expect(
           runtime_types.map((runtime_type) => runtime_type.id)

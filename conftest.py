@@ -32,6 +32,16 @@ KFP_COMPONENT_CACHE_INSTANCE = {
     "schema_name": "elyra-kfp-examples-catalog",
 }
 
+AIRFLOW_TEST_OPERATOR_CATALOG = {
+    "display_name": "Airflow Test Operator",
+    "metadata": {
+        "runtime_type": "APACHE_AIRFLOW",
+        "base_path": str(Path(__file__).parent / "elyra" / "tests" / "pipeline" / "resources" / "components"),
+        "paths": ["airflow_test_operator.py"],
+    },
+    "schema_name": "local-file-catalog",
+}
+
 
 @pytest.fixture
 def component_cache(jp_environ):
