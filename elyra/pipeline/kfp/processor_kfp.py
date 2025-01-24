@@ -708,6 +708,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             artifact_object_prefix = join_paths(
                 pipeline.pipeline_properties.get(pipeline_constants.COS_OBJECT_PREFIX), pipeline_instance_id
             )
+            cos_output_append_run_id = pipeline.pipeline_properties.get(
+                pipeline_constants.COS_OUTPUT_APPEND_RUN_ID, False
+            )
             # - load the generic component definition template
             template_env = Environment(loader=PackageLoader("elyra", "templates/kubeflow/v2"))
             generic_component_template = template_env.get_template("generic_component_definition_template.jinja2")
@@ -781,6 +784,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                         cos_endpoint=cos_endpoint,
                         cos_bucket=cos_bucket,
                         cos_directory=artifact_object_prefix,
+                        cos_output_append_run_id=cos_output_append_run_id,
                         cos_dependencies_archive=self._get_dependency_archive_name(operation),
                         filename=operation.filename,
                         cos_inputs=operation.inputs,
@@ -1046,6 +1050,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_endpoint: str,
         cos_bucket: str,
         cos_directory: str,
+        cos_output_append_run_id: bool,
         cos_dependencies_archive: str,
         filename: str,
         cos_inputs: Optional[List[str]] = [],
@@ -1119,6 +1124,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             f"--cos-endpoint '{cos_endpoint}' "
             f"--cos-bucket '{cos_bucket}' "
             f"--cos-directory '{cos_directory}' "
+            f"{'--cos-output-append-run-id ' if cos_output_append_run_id else ''}"
             f"--cos-dependencies-archive '{cos_dependencies_archive}' "
             f"--file '{filename}' "
         ]

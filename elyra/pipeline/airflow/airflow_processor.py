@@ -255,6 +255,7 @@ be fully qualified (i.e., prefixed with their package names).
         artifact_object_prefix = join_paths(
             pipeline.pipeline_properties.get(pipeline_constants.COS_OBJECT_PREFIX), pipeline_instance_id
         )
+        cos_output_append_run_id = pipeline.pipeline_properties.get(pipeline_constants.COS_OUTPUT_APPEND_RUN_ID, False)
 
         self.log_pipeline_info(
             pipeline_name,
@@ -327,6 +328,7 @@ be fully qualified (i.e., prefixed with their package names).
                     cos_endpoint=cos_endpoint,
                     cos_bucket=cos_bucket,
                     cos_directory=artifact_object_prefix,
+                    cos_output_append_run_id=cos_output_append_run_id,
                     cos_dependencies_archive=operation_artifact_archive,
                     inputs=operation.inputs,
                     outputs=operation.outputs,

@@ -53,6 +53,7 @@ class BootscriptBuilder(object):
         cos_endpoint: str,
         cos_bucket: str,
         cos_directory: str,
+        cos_output_append_run_id: bool,
         cos_dependencies_archive: str,
         inputs: Optional[List[str]] = None,
         outputs: Optional[List[str]] = None,
@@ -65,6 +66,7 @@ class BootscriptBuilder(object):
         :param :cos_endpoint: object storage endpoint e.g weaikish1.fyre.ibm.com:30442
         :param :cos_bucket: bucket to retrieve archive from
         :param :cos_directory: name of the directory in the object storage bucket to pull
+        :param :cos_output_append_run_id: whether to append the run id to the output file path
         :param :cos_dependencies_archive: archive file name to get from object storage bucket e.g archive1.tar.gz
         :param inputs: comma delimited list of files to be consumed/are required by the filename
         :param outputs: comma delimited list of files produced by the filename
@@ -73,6 +75,7 @@ class BootscriptBuilder(object):
         self.cos_endpoint = cos_endpoint
         self.cos_bucket = cos_bucket
         self.cos_directory = cos_directory
+        self.cos_output_append_run_id = cos_output_append_run_id
         self.cos_dependencies_archive = cos_dependencies_archive
         self.filename = filename
         self.pipeline_name = pipeline_name
@@ -103,6 +106,7 @@ class BootscriptBuilder(object):
             f"--cos-endpoint {self.cos_endpoint} "
             f"--cos-bucket {self.cos_bucket} "
             f"--cos-directory '{self.cos_directory}' "
+            f"{'--cos-output-append-run-id ' if self.cos_output_append_run_id else ''}"
             f"--cos-dependencies-archive '{self.cos_dependencies_archive}' "
             f"--file '{self.filename}' "
         ]

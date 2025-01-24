@@ -28,6 +28,7 @@ from elyra.metadata.schemaspaces import ComponentCatalogs
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline_constants import (
     COS_OBJECT_PREFIX,
+    COS_OUTPUT_APPEND_RUN_ID,
     DISABLE_NODE_CACHING,
     ENV_VARIABLES,
     KUBERNETES_POD_ANNOTATIONS,
@@ -266,6 +267,7 @@ async def test_get_pipeline_properties_definition(jp_fetch):
 
         default_properties = [
             COS_OBJECT_PREFIX,
+            COS_OUTPUT_APPEND_RUN_ID,
             RUNTIME_IMAGE,
             ENV_VARIABLES,
             KUBERNETES_SECRETS,

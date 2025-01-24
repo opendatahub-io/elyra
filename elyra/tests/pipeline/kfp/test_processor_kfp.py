@@ -118,6 +118,7 @@ def test_compose_container_command_args(processor: KfpPipelineProcessor):
     cos_endpoint = "https://minio:9000"
     cos_bucket = "test_bucket"
     cos_directory = "a_dir"
+    cos_output_append_run_id = True
     cos_dependencies_archive = "dummy-notebook-0815.tar.gz"
     filename = "dummy-notebook.ipynb"
 
@@ -126,6 +127,7 @@ def test_compose_container_command_args(processor: KfpPipelineProcessor):
         cos_endpoint=cos_endpoint,
         cos_bucket=cos_bucket,
         cos_directory=cos_directory,
+        cos_output_append_run_id=cos_output_append_run_id,
         cos_dependencies_archive=cos_dependencies_archive,
         filename=filename,
     )
@@ -134,6 +136,7 @@ def test_compose_container_command_args(processor: KfpPipelineProcessor):
     assert f"--cos-endpoint '{cos_endpoint}'" in command_args
     assert f"--cos-bucket '{cos_bucket}'" in command_args
     assert f"--cos-directory '{cos_directory}'" in command_args
+    assert "--cos-output-append-run-id" in command_args
     assert f"--cos-dependencies-archive '{cos_dependencies_archive}'" in command_args
     assert f"--file '{filename}'" in command_args
 
@@ -148,6 +151,7 @@ def test_compose_container_command_args(processor: KfpPipelineProcessor):
                 cos_endpoint=cos_endpoint,
                 cos_bucket=cos_bucket,
                 cos_directory=cos_directory,
+                cos_output_append_run_id=True,
                 cos_dependencies_archive=cos_dependencies_archive,
                 filename=filename,
                 cos_inputs=file_dependency,
@@ -199,6 +203,7 @@ def test_compose_container_command_args_invalid_dependency_filename(processor: K
                     cos_endpoint=cos_endpoint,
                     cos_bucket=cos_bucket,
                     cos_directory=cos_directory,
+                    cos_output_append_run_id=True,
                     cos_dependencies_archive=cos_dependencies_archive,
                     filename=filename,
                     cos_inputs=file_dependency,

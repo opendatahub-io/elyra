@@ -634,7 +634,8 @@
         },
         "properties": {
           "pipeline_defaults": {
-            "cos_object_prefix": "test/prefix"
+            "cos_object_prefix": "test/prefix",
+            "cos_output_append_run_id": "true"
           }
         },
         "version": 5,

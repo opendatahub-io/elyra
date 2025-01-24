@@ -49,6 +49,7 @@ MINIO_HOST_PORT = os.getenv("MINIO_HOST_PORT", "127.0.0.1:9000")
 
 ELYRA_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 RESOURCES_DIR = os.path.join(ELYRA_ROOT_DIR, "elyra", "tests", "kfp", "resources")
+ELYRA_RUN_ID_TEST = "9d8f5715-2e7c-4e64-8e34-35f510c12e66"
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -114,6 +115,7 @@ def main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict):
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "minioadmin")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "minioadmin")
     monkeypatch.setenv("TEST_ENV_VAR1", "test_env_var1")
+    monkeypatch.setenv("ELYRA_RUN_NAME", ELYRA_RUN_ID_TEST)
 
     s3_setup.fput_object(
         bucket_name=argument_dict["cos-bucket"],
@@ -137,22 +139,27 @@ def main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict):
             "test-archive.tgz",
             "test-file.txt",
             "test,file.txt",
+        ]
+        test_output_file_list = [
             "test-file/test-file-copy.txt",
             "test-file/test,file/test,file-copy.txt",
             "test-notebookA.ipynb",
-            "test-notebookA-output.ipynb",
             "test-notebookA.html",
+            "test-notebookA-output.ipynb",
         ]
         # Ensure working directory has all the files.
-        for file in test_file_list:
+        for file in test_file_list + test_output_file_list:
             assert os.path.isfile(file)
+        for file in test_file_list:
+            assert s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name="test-directory/" + file)
         # Ensure upload directory has all the files EXCEPT the output notebook
         # since it was it is uploaded as the input notebook (test-notebookA.ipynb)
         # (which is included in the archive at start).
-        for file in test_file_list:
+        for file in test_output_file_list:
             if file != "test-notebookA-output.ipynb":
+                run_id_prefix = f"{ELYRA_RUN_ID_TEST}/" if argument_dict.get("cos-output-append-run-id", False) else ""
                 assert s3_setup.stat_object(
-                    bucket_name=argument_dict["cos-bucket"], object_name="test-directory/" + file
+                    bucket_name=argument_dict["cos-bucket"], object_name=f"test-directory/{run_id_prefix}{file}"
                 )
                 if file == "test-notebookA.html":
                     with open("test-notebookA.html") as html_file:
@@ -178,11 +185,13 @@ def _get_operation_instance(monkeypatch, s3_setup):
     return op
 
 
-def test_main_method(monkeypatch, s3_setup, tmpdir):
+@pytest.mark.parametrize("cos_output_append_run_id", [False, True])
+def test_main_method(monkeypatch, s3_setup, tmpdir, cos_output_append_run_id):
     argument_dict = {
         "cos-endpoint": "http://" + MINIO_HOST_PORT,
         "cos-bucket": "test-bucket",
         "cos-directory": "test-directory",
+        "cos-output-append-run-id": cos_output_append_run_id,
         "cos-dependencies-archive": "test-archive.tgz",
         "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
         "inputs": "test-file.txt;test,file.txt",
@@ -192,11 +201,13 @@ def test_main_method(monkeypatch, s3_setup, tmpdir):
     main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict)
 
 
-def test_main_method_with_wildcard_outputs(monkeypatch, s3_setup, tmpdir):
+@pytest.mark.parametrize("cos_output_append_run_id", [False, True])
+def test_main_method_with_wildcard_outputs(monkeypatch, s3_setup, tmpdir, cos_output_append_run_id):
     argument_dict = {
         "cos-endpoint": "http://" + MINIO_HOST_PORT,
         "cos-bucket": "test-bucket",
         "cos-directory": "test-directory",
+        "cos-output-append-run-id": cos_output_append_run_id,
         "cos-dependencies-archive": "test-archive.tgz",
         "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
         "inputs": "test-file.txt;test,file.txt",
@@ -206,11 +217,13 @@ def test_main_method_with_wildcard_outputs(monkeypatch, s3_setup, tmpdir):
     main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict)
 
 
-def test_main_method_with_dir_outputs(monkeypatch, s3_setup, tmpdir):
+@pytest.mark.parametrize("cos_output_append_run_id", [False, True])
+def test_main_method_with_dir_outputs(monkeypatch, s3_setup, tmpdir, cos_output_append_run_id):
     argument_dict = {
         "cos-endpoint": "http://" + MINIO_HOST_PORT,
         "cos-bucket": "test-bucket",
         "cos-directory": "test-directory",
+        "cos-output-append-run-id": cos_output_append_run_id,
         "cos-dependencies-archive": "test-archive.tgz",
         "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
         "inputs": "test-file.txt;test,file.txt",

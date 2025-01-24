@@ -78,6 +78,7 @@ class FileOpBase(ABC):
         self.input_params = kwargs or []
         self.cos_endpoint = urlparse(self.input_params.get("cos-endpoint"))
         self.cos_bucket = self.input_params.get("cos-bucket")
+        self.append_run_id = self.input_params.get("cos-output-append-run-id")
 
         # Infer secure from the endpoint's scheme.
         self.secure = self.cos_endpoint.scheme == "https"
@@ -183,6 +184,10 @@ class FileOpBase(ABC):
         object_to_upload = object_name
         if not object_to_upload:
             object_to_upload = file_to_upload
+
+        run_id = os.getenv("ELYRA_RUN_NAME")
+        if self.append_run_id and run_id:
+            object_to_upload = os.path.join(run_id, object_to_upload)
 
         object_to_upload = self.get_object_storage_filename(object_to_upload)
         t0 = time.time()
@@ -542,6 +547,15 @@ class OpUtil(object):
             dest="pipeline-name",
             help="Pipeline name",
             required=True,
+        )
+        parser.add_argument(
+            "-a",
+            "--cos-output-append-run-id",
+            dest="cos-output-append-run-id",
+            type=bool,
+            help="Append run ID to the cloud object storage output path",
+            required=False,
+            action=argparse.BooleanOptionalAction,
         )
         parser.add_argument("-f", "--file", dest="filepath", help="File to execute", required=True)
         parser.add_argument("-o", "--outputs", dest="outputs", help="Files to output to object store", required=False)

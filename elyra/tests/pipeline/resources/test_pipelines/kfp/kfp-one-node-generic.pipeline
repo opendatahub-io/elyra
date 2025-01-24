@@ -96,7 +96,8 @@
             "kubernetes_secrets": [],
             "env_vars": [],
             "runtime_image": "tensorflow/tensorflow:2.8.0",
-            "cos_object_prefix": "my/project"
+            "cos_object_prefix": "my/project",
+            "cos_output_append_run_id": "true"
           },
           "name": "kfp-one-node-generic",
           "runtime": "Kubeflow Pipelines",

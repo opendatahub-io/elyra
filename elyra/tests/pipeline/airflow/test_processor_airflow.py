@@ -31,6 +31,7 @@ from elyra.pipeline.airflow.airflow_processor import AirflowPipelineProcessor
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline import GenericOperation
 from elyra.pipeline.pipeline_constants import COS_OBJECT_PREFIX
+from elyra.pipeline.pipeline_constants import COS_OUTPUT_APPEND_RUN_ID
 from elyra.pipeline.pipeline_constants import MOUNTED_VOLUMES
 from elyra.pipeline.properties import ElyraProperty
 from elyra.pipeline.runtime_type import RuntimeProcessorType
@@ -177,6 +178,12 @@ def test_create_file(monkeypatch, processor, parsed_pipeline, parsed_ordered_dic
     # Ensure the value of COS_OBJECT_PREFIX has been propagated to the Pipeline object appropriately
     cos_prefix = pipeline_json["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"].get(COS_OBJECT_PREFIX)
     assert cos_prefix == parsed_pipeline.pipeline_properties.get(COS_OBJECT_PREFIX)
+
+    # Ensure the value of COS_OUTPUT_APPEND_RUN_ID has been propagated to the Pipeline object appropriately
+    cos_output_append_run_id = pipeline_json["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"].get(
+        COS_OUTPUT_APPEND_RUN_ID
+    )
+    assert cos_output_append_run_id == parsed_pipeline.pipeline_properties.get(COS_OUTPUT_APPEND_RUN_ID)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         export_pipeline_output_path = os.path.join(temp_dir, f"{export_pipeline_name}.py")

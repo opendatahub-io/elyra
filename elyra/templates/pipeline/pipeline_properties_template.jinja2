@@ -35,6 +35,15 @@
             "ui:placeholder": "project/subproject"
           }
         },
+        "cos_output_append_run_id": {
+          "title": "Append Run ID to Output Path",
+          "type": "boolean",
+          "description": "If enabled, the Run ID will be appended to the output path in Object Storage.",
+          "uihints": {
+            "ui:widget": "checkbox",
+            "ui:help": "Useful for distinguishing outputs from different runs."
+          }
+        },
         {% if elyra_owned_properties %}
         "node_defaults_header": {
           "type": "null",

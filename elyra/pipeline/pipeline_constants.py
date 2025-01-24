@@ -26,3 +26,4 @@ KUBERNETES_POD_LABELS = "kubernetes_pod_labels"
 DISABLE_NODE_CACHING = "disable_node_caching"
 KUBERNETES_SHARED_MEM_SIZE = "kubernetes_shared_mem_size"
 COS_OBJECT_PREFIX = "cos_object_prefix"  # optional static prefix to be used when generating object name for cos storage
+COS_OUTPUT_APPEND_RUN_ID = "cos_output_append_run_id"  # optional flag to append run id to cos output path

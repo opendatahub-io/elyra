@@ -76,6 +76,7 @@ def test_fail_with_empty_string_as_filename():
             cos_endpoint="http://testserver:32525",
             cos_bucket="test_bucket",
             cos_directory="test_directory",
+            cos_output_append_run_id=False,
             cos_dependencies_archive="test_archive.tgz",
         )
     assert "You need to provide a filename for the operation." == str(error_info.value)
@@ -91,6 +92,7 @@ def test_build_cmd_with_inputs_and_outputs():
         cos_endpoint="http://testserver:32525",
         cos_bucket="test_bucket",
         cos_directory="test_directory",
+        cos_output_append_run_id=False,
         cos_dependencies_archive="test_archive.tgz",
         inputs=pipeline_inputs,
         outputs=pipeline_outputs,
@@ -106,3 +108,26 @@ def test_build_cmd_with_inputs_and_outputs():
             assert arg_value == f"'{';'.join(pipeline_outputs)}'"
         if "inputs" in arg:
             assert arg_value == f"'{';'.join(pipeline_inputs)}'"
+
+
+@pytest.mark.parametrize(
+    "cos_output_append_run_id, expected_in_cmd",
+    [
+        (False, False),
+        (True, True),
+    ],
+)
+def test_cos_output_append_run_id(cos_output_append_run_id, expected_in_cmd):
+    boot_build = BootscriptBuilder(
+        filename="test_notebook.ipynb",
+        pipeline_name="test-pipeline",
+        cos_endpoint="http://testserver:32525",
+        cos_bucket="test_bucket",
+        cos_directory="test_directory",
+        cos_output_append_run_id=cos_output_append_run_id,
+        cos_dependencies_archive="test_archive.tgz",
+    )
+    if expected_in_cmd:
+        assert "--cos-output-append-run-id" in boot_build.container_cmd
+    else:
+        assert "--cos-output-append-run-id" not in boot_build.container_cmd
