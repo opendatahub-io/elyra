@@ -39,7 +39,6 @@ on:
 env:
   FORCE_COLOR: true
   NODE_VERSION: 22
-  YARN_VERSION: 3.5.0
   PYTHON_VERSION: 3.13
 
 jobs:
@@ -63,10 +62,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Install UI dependencies
         uses: ./.github/actions/install-ui-dependencies
       - name: Check version
