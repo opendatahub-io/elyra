@@ -24,7 +24,6 @@ on:
 env:
   FORCE_COLOR: true
   NODE_VERSION: 22
-  YARN_VERSION: 3.5.0
   PYTHON_VERSION: 3.11
   QUAY_WORKBENCH_IMAGES_REPOSITORY: 'opendatahub/workbench-images'
   QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV: 'jupyter-trustyai-ubi9-python-3.11-20250,cuda-jupyter-tensorflow-ubi9-python-3.11-20250'
@@ -46,10 +45,6 @@ jobs:
             */*/node_modules
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Install UI dependencies
         uses: ./.github/actions/install-ui-dependencies
   lint-server:
@@ -79,10 +74,6 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Install UI dependencies
         uses: ./.github/actions/install-ui-dependencies
       - name: Lint
@@ -142,10 +133,6 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Install UI dependencies
         uses: ./.github/actions/install-ui-dependencies
       - name: Build
@@ -180,10 +167,6 @@ jobs:
             */*/node_modules
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Install UI dependencies
         uses: ./.github/actions/install-ui-dependencies
       - name: Build
@@ -265,10 +248,6 @@ jobs:
             */*/node_modules
             /home/runner/.cache/Cypress
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Install Yarn ${{ env.YARN_VERSION }}
-        uses: ./.github/actions/install-yarn
-        with:
-          version: ${{ env.YARN_VERSION }}
       - name: Check whether to build container images
         id: should-build-images
         run: |
