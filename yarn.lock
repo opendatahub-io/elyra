@@ -2182,22 +2182,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@elyra/code-viewer-extension@workspace:packages/code-viewer":
-  version: 0.0.0-use.local
-  resolution: "@elyra/code-viewer-extension@workspace:packages/code-viewer"
-  dependencies:
-    "@jupyterlab/application": ^4.4.2
-    "@jupyterlab/apputils": ^4.4.2
-    "@jupyterlab/builder": ^4.4.2
-    "@jupyterlab/codeeditor": ^4.4.2
-    "@jupyterlab/ui-components": ^4.4.2
-    "@lumino/algorithm": ^2.0.3
-    "@lumino/widgets": ^2.7.1
-    rimraf: ~5.0.5
-    typescript: ~5.5.4
-  languageName: unknown
-  linkType: soft
-
 "@elyra/metadata-common@4.0.0-dev, @elyra/metadata-common@workspace:packages/metadata-common":
   version: 0.0.0-use.local
   resolution: "@elyra/metadata-common@workspace:packages/metadata-common"
