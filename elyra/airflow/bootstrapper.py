@@ -1,6 +1,5 @@
 #
-#
-# Copyright 2018-2023 Elyra Authors
+# Copyright 2018-2025 Elyra Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,22 +19,16 @@ import glob
 import json
 import logging
 import os
-from pathlib import Path
 import subprocess
 import sys
-from tempfile import TemporaryFile
 import time
 from typing import Any
-from typing import Dict
 from typing import Optional
 from typing import Type
 from typing import TypeVar
-from urllib.parse import urljoin
 from urllib.parse import urlparse
-from urllib.parse import urlunparse
 
 from packaging import version
-
 
 # Inputs and Outputs separator character.  If updated,
 # same-named variable in _notebook_op.py must be updated!
@@ -47,6 +40,11 @@ F = TypeVar("F", bound="FileOpBase")
 
 logger = logging.getLogger("elyra")
 enable_pipeline_info = os.getenv("ELYRA_ENABLE_PIPELINE_INFO", "true").lower() == "true"
+# not only log File Operations output of NotebookFileOp, RFileOp, PythonFileOp to stdout so it appears
+# in runtime / container logs and also Airflow and KFP GUI logs, but also put output to S3 storage
+enable_generic_node_script_output_to_s3 = (
+    os.getenv("ELYRA_GENERIC_NODES_ENABLE_SCRIPT_OUTPUT_TO_S3", "true").lower() == "true"
+)
 pipeline_name = None  # global used in formatted logging
 operation_name = None  # global used in formatted logging
 
@@ -77,12 +75,9 @@ class FileOpBase(ABC):
         from minio.credentials import providers
 
         self.filepath = kwargs["filepath"]
-        self.input_params = kwargs or {}
+        self.input_params = kwargs or []
         self.cos_endpoint = urlparse(self.input_params.get("cos-endpoint"))
         self.cos_bucket = self.input_params.get("cos-bucket")
-
-        self.parameter_pass_method = self.input_params.get("parameter_pass_method")
-        self.pipeline_param_dict = self.convert_param_str_to_dict(self.input_params.get("pipeline_parameters"))
 
         # Infer secure from the endpoint's scheme.
         self.secure = self.cos_endpoint.scheme == "https"
@@ -151,130 +146,10 @@ class FileOpBase(ABC):
             output_list = outputs.split(INOUT_SEPARATOR)
             for file in output_list:
                 self.process_output_file(file.strip())
-        duration = time.time() - t0
-        OpUtil.log_operation_info("outputs processed", duration)
-
-    def process_metrics_and_metadata(self) -> None:
-        """Process metrics and metadata
-
-        This method exposes metrics/metadata that the processed
-        notebook | script produces in the KFP UI.
-
-        This method should not be overridden by subclasses.
-        """
-
-        OpUtil.log_operation_info("processing metrics and metadata")
-        t0 = time.time()
-
-        # Location where the KFP specific output files will be stored
-        # in the environment where the bootsrapper is running.
-        # Defaults to '/tmp' if not specified.
-        output_path = Path(os.getenv("ELYRA_WRITABLE_CONTAINER_DIR", "/tmp"))
-
-        # verify that output_path exists, is a directory
-        # and writable by creating a temporary file in that location
-        try:
-            with TemporaryFile(mode="w", dir=output_path) as t:
-                t.write("can write")
-        except Exception:
-            # output_path doesn't meet the requirements
-            # treat this as a non-fatal error and log a warning
-            logger.warning(f'Cannot create files in "{output_path}".')
-            OpUtil.log_operation_info("Aborted metrics and metadata processing", time.time() - t0)
-            return
-
-        # Name of the proprietary KFP UI metadata file.
-        # Notebooks | scripts might (but don't have to) produce this file
-        # as documented in
-        # https://www.kubeflow.org/docs/pipelines/sdk/output-viewer/
-        # Each ExecuteFileOp must declare this as an output file or
-        # the KFP UI won't pick up the information.
-        kfp_ui_metadata_filename = "mlpipeline-ui-metadata.json"
-
-        # Name of the proprietary KFP metadata file.
-        # Notebooks | scripts might (but don't have to) produce this file
-        # as documented in
-        # https://www.kubeflow.org/docs/pipelines/sdk/pipelines-metrics/
-        # Each ExecuteFileOp must declare this as an output file or
-        # the KFP UI won't pick up the information.
-        kfp_metrics_filename = "mlpipeline-metrics.json"
-
-        # If the notebook | Python script produced one of the files
-        # copy it to the target location where KFP is looking for it.
-        for filename in [kfp_ui_metadata_filename, kfp_metrics_filename]:
-            try:
-                src = Path(".") / filename
-                logger.debug(f"Processing {src} ...")
-                # try to load the file, if one was created by the
-                # notebook or script
-                with open(src, "r") as f:
-                    metadata = json.load(f)
-
-                # the file exists and contains valid JSON
-                logger.debug(f"File content: {json.dumps(metadata)}")
-
-                target = output_path / filename
-                # try to save the file in the destination location
-                with open(target, "w") as f:
-                    json.dump(metadata, f)
-            except FileNotFoundError:
-                # The script | notebook didn't produce the file
-                # we are looking for. This is not an error condition
-                # that needs to be handled.
-                logger.debug(f"{self.filepath} produced no file named {src}")
-            except ValueError as ve:
-                # The file content could not be parsed. Log a warning
-                # and treat this as a non-fatal error.
-                logger.warning(f"Ignoring incompatible {str(src)} produced by {self.filepath}: {ve} {str(ve)}")
-            except Exception as ex:
-                # Something is wrong with the user-generated metadata file.
-                # Log a warning and treat this as a non-fatal error.
-                logger.warning(f"Error processing {str(src)} produced by {self.filepath}: {ex} {str(ex)}")
-
-        #
-        # Augment kfp_ui_metadata_filename with Elyra-specific information:
-        #  - link to object storage where input and output artifacts are
-        #    stored
-        ui_metadata_output = output_path / kfp_ui_metadata_filename
-        try:
-            # re-load the file
-            with open(ui_metadata_output, "r") as f:
-                metadata = json.load(f)
-        except Exception:
-            # ignore all errors
-            metadata = {}
-
-        # Assure the 'output' property exists and is of the correct type
-        if metadata.get("outputs", None) is None or not isinstance(metadata["outputs"], list):
-            metadata["outputs"] = []
-
-        # Define HREF for COS bucket:
-        # <COS_URL>/<BUCKET_NAME>/<COS_DIRECTORY>
-        bucket_url = urljoin(
-            urlunparse(self.cos_endpoint), f"{self.cos_bucket}/{self.input_params.get('cos-directory', '')}/"
-        )
-
-        # add Elyra metadata to 'outputs'
-        metadata["outputs"].append(
-            {
-                "storage": "inline",
-                "source": f"## Inputs for {self.filepath}\n"
-                f"[{self.input_params['cos-dependencies-archive']}]({bucket_url})",
-                "type": "markdown",
-            }
-        )
-
-        # print the content of the augmented metadata file
-        logger.debug(f"Output UI metadata: {json.dumps(metadata)}")
-
-        logger.debug(f"Saving UI metadata file as {ui_metadata_output} ...")
-
-        # Save [updated] KFP UI metadata file
-        with open(ui_metadata_output, "w") as f:
-            json.dump(metadata, f)
-
-        duration = time.time() - t0
-        OpUtil.log_operation_info("metrics and metadata processed", duration)
+            duration = time.time() - t0
+            OpUtil.log_operation_info("outputs processed", duration)
+        else:
+            OpUtil.log_operation_info("No outputs found in this operation")
 
     def get_object_storage_filename(self, filename: str) -> str:
         """Function to pre-pend cloud storage working dir to file name
@@ -335,25 +210,6 @@ class FileOpBase(ABC):
             else:
                 self.put_file_to_object_storage(matched_file)
 
-    def convert_param_str_to_dict(self, pipeline_parameters: Optional[str] = None) -> Dict[str, Any]:
-        """Convert INOUT-separated string of pipeline parameters into a dictionary."""
-        parameter_dict = {}
-        if pipeline_parameters:
-            parameter_list = pipeline_parameters.split(INOUT_SEPARATOR)
-            for parameter in parameter_list:
-                param_name, value = parameter.split("=", 1)
-                if self.parameter_pass_method == "env" and (not value or not isinstance(value, str)):
-                    continue  # env vars must be non-empty strings
-                parameter_dict[param_name] = value
-        return parameter_dict
-
-    def set_parameters_in_env(self) -> None:
-        """Make pipeline parameters available as environment variables."""
-        for name, value in self.pipeline_param_dict.items():
-            if name in os.environ:
-                continue  # avoid overwriting env vars with the same name
-            os.environ[name] = value
-
 
 class NotebookFileOp(FileOpBase):
     """Perform Notebook File Operation"""
@@ -362,36 +218,44 @@ class NotebookFileOp(FileOpBase):
         """Execute the Notebook and upload results to object storage"""
         notebook = os.path.basename(self.filepath)
         notebook_name = notebook.replace(".ipynb", "")
-        notebook_output = f"{notebook_name}-output.ipynb"
-        notebook_html = f"{notebook_name}.html"
+        notebook_output = notebook_name + "-output.ipynb"
+        notebook_html = notebook_name + ".html"
 
         try:
             OpUtil.log_operation_info(f"executing notebook using 'papermill {notebook} {notebook_output}'")
             t0 = time.time()
+
             # Include kernel selection in execution time
             kernel_name = NotebookFileOp.find_best_kernel(notebook)
 
-            kwargs = {}
-            if self.parameter_pass_method == "env":
-                self.set_parameters_in_env()
-
+            # Really hate to do this but have to invoke Papermill via library as workaround
             import papermill
 
-            papermill.execute_notebook(notebook, notebook_output, kernel_name=kernel_name, **kwargs)
+            logger.info("Processing file: %s", notebook)
+            papermill.execute_notebook(
+                notebook,
+                notebook_output,
+                kernel_name=kernel_name,
+                log_output=True,
+                stdout_file=sys.stdout,
+                stderr_file=sys.stderr,
+            )
             duration = time.time() - t0
             OpUtil.log_operation_info("notebook execution completed", duration)
 
             NotebookFileOp.convert_notebook_to_html(notebook_output, notebook_html)
-            self.put_file_to_object_storage(notebook_output, notebook)
-            self.put_file_to_object_storage(notebook_html)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(notebook_output, notebook)
+                self.put_file_to_object_storage(notebook_html)
             self.process_outputs()
         except Exception as ex:
             # log in case of errors
             logger.error(f"Unexpected error: {sys.exc_info()[0]}")
 
             NotebookFileOp.convert_notebook_to_html(notebook_output, notebook_html)
-            self.put_file_to_object_storage(notebook_output, notebook)
-            self.put_file_to_object_storage(notebook_html)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(notebook_output, notebook)
+                self.put_file_to_object_storage(notebook_html)
             raise ex
 
     @staticmethod
@@ -472,43 +336,43 @@ class PythonFileOp(FileOpBase):
         """Execute the Python script and upload results to object storage"""
         python_script = os.path.basename(self.filepath)
         python_script_name = python_script.replace(".py", "")
-        python_script_output = f"{python_script_name}.log"
+        python_script_output = python_script_name + ".log"
 
         try:
             OpUtil.log_operation_info(
-                f"executing python script using 'python3 {python_script}' to '{python_script_output}'"
+                f"executing python script using " f"'python3 {python_script}' to '{python_script_output}'"
             )
             t0 = time.time()
 
             run_args = ["python3", python_script]
-            if self.parameter_pass_method == "env":
-                self.set_parameters_in_env()
 
-            logger.info("----------------------Python logs start----------------------")
-            # Removing support for the s3 storage of python script logs
-            # with open(python_script_output, "w") as log_file:
-            #     process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            logger.info("Processing file: %s", python_script)
+            try:
+                result = subprocess.run(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+                output = result.stdout.decode("utf-8")
+                if enable_generic_node_script_output_to_s3:
+                    with open(python_script_output, "w") as log_file:
+                        log_file.write(output)
+                logger.info("Output: %s", output)
+                logger.info("Return code: %s", result.returncode)
+            except subprocess.CalledProcessError as e:
+                logger.error("Output: %s", e.output.decode("utf-8"))
+                logger.error("Return code: %s", e.returncode)
+                raise subprocess.CalledProcessError(e.returncode, run_args)
 
-            for line in iter(process.stdout.readline, b""):
-                sys.stdout.write(line.decode())
-
-            process.stdout.close()
-            return_code = process.wait()
-            logger.info("----------------------Python logs ends----------------------")
-            if return_code:
-                raise subprocess.CalledProcessError(return_code, run_args)
             duration = time.time() - t0
             OpUtil.log_operation_info("python script execution completed", duration)
 
-            # self.put_file_to_object_storage(python_script_output, python_script_output)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(python_script_output, python_script_output)
             self.process_outputs()
         except Exception as ex:
             # log in case of errors
             logger.error(f"Unexpected error: {sys.exc_info()[0]}")
             logger.error(f"Error details: {ex}")
 
-            # self.put_file_to_object_storage(python_script_output, python_script_output)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(python_script_output, python_script_output)
             raise ex
 
 
@@ -519,42 +383,41 @@ class RFileOp(FileOpBase):
         """Execute the R script and upload results to object storage"""
         r_script = os.path.basename(self.filepath)
         r_script_name = r_script.replace(".r", "")
-        r_script_output = f"{r_script_name}.log"
+        r_script_output = r_script_name + ".log"
 
         try:
-            OpUtil.log_operation_info(f"executing R script using 'Rscript {r_script}' to '{r_script_output}'")
+            OpUtil.log_operation_info(f"executing R script using " f"'Rscript {r_script}' to '{r_script_output}'")
             t0 = time.time()
 
             run_args = ["Rscript", r_script]
-            if self.parameter_pass_method == "env":
-                self.set_parameters_in_env()
 
-            logger.info("----------------------R script logs start----------------------")
-            # Removing support for the s3 storage of R script logs
-            # with open(r_script_output, "w") as log_file:
-            #     process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            process = subprocess.Popen(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-            for line in iter(process.stdout.readline, b""):
-                sys.stdout.write(line.decode())
-
-            process.stdout.close()
-            return_code = process.wait()
-            logger.info("----------------------R script logs ends----------------------")
-            if return_code:
-                raise subprocess.CalledProcessError(return_code, run_args)
+            logger.info("Processing file: %s", r_script)
+            try:
+                result = subprocess.run(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+                output = result.stdout.decode("utf-8")
+                if enable_generic_node_script_output_to_s3:
+                    with open(r_script_output, "w") as log_file:
+                        log_file.write(output)
+                logger.info("Output: %s", output)
+                logger.info("Return code: %s", result.returncode)
+            except subprocess.CalledProcessError as e:
+                logger.error("Output: %s", e.output.decode("utf-8"))
+                logger.error("Return code: %s", e.returncode)
+                raise subprocess.CalledProcessError(e.returncode, run_args)
 
             duration = time.time() - t0
             OpUtil.log_operation_info("R script execution completed", duration)
 
-            # self.put_file_to_object_storage(r_script_output, r_script_output)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(r_script_output, r_script_output)
             self.process_outputs()
         except Exception as ex:
             # log in case of errors
             logger.error(f"Unexpected error: {sys.exc_info()[0]}")
             logger.error(f"Error details: {ex}")
 
-            # self.put_file_to_object_storage(r_script_output, r_script_output)
+            if enable_generic_node_script_output_to_s3:
+                self.put_file_to_object_storage(r_script_output, r_script_output)
             raise ex
 
 
@@ -562,7 +425,7 @@ class OpUtil(object):
     """Utility functions for preparing file execution."""
 
     @classmethod
-    def package_install(cls, user_volume_path) -> None:
+    def package_install(cls) -> None:
         OpUtil.log_operation_info("Installing packages")
         t0 = time.time()
         requirements_file = cls.determine_elyra_requirements()
@@ -601,14 +464,7 @@ class OpUtil(object):
                 to_install_list.append(f"{package}=={ver}")
 
         if to_install_list:
-            if user_volume_path:
-                to_install_list.insert(0, f"--target={user_volume_path}")
-                to_install_list.append("--no-cache-dir")
-
             subprocess.run([sys.executable, "-m", "pip", "install"] + to_install_list, check=True)
-
-        if user_volume_path:
-            os.environ["PIP_CONFIG_FILE"] = f"{user_volume_path}/pip.conf"
 
         subprocess.run([sys.executable, "-m", "pip", "freeze"])
         duration = time.time() - t0
@@ -617,7 +473,7 @@ class OpUtil(object):
     @classmethod
     def determine_elyra_requirements(cls) -> Any:
         if sys.version_info.major == 3:
-            if sys.version_info.minor in [8, 9, 10, 11]:
+            if sys.version_info.minor in [9, 10, 11]:
                 return "requirements-elyra.txt"
         logger.error(
             f"This version of Python '{sys.version_info.major}.{sys.version_info.minor}' "
@@ -656,7 +512,7 @@ class OpUtil(object):
     def parse_arguments(cls, args) -> dict:
         import argparse
 
-        global pipeline_name, operation_name
+        global pipeline_name, operation_name  # noqa: F824
 
         logger.debug("Parsing Arguments.....")
         parser = argparse.ArgumentParser()
@@ -680,16 +536,6 @@ class OpUtil(object):
             help="Archive containing notebook and dependency artifacts",
             required=True,
         )
-        parser.add_argument("-f", "--file", dest="filepath", help="File to execute", required=True)
-        parser.add_argument("-o", "--outputs", dest="outputs", help="Files to output to object store", required=False)
-        parser.add_argument("-i", "--inputs", dest="inputs", help="Files to pull in from parent node", required=False)
-        parser.add_argument(
-            "-p",
-            "--user-volume-path",
-            dest="user-volume-path",
-            help="Directory in Volume to install python libraries into",
-            required=False,
-        )
         parser.add_argument(
             "-n",
             "--pipeline-name",
@@ -697,21 +543,9 @@ class OpUtil(object):
             help="Pipeline name",
             required=True,
         )
-        parser.add_argument(
-            "-r",
-            "--pipeline-parameters",
-            dest="pipeline_parameters",
-            help="Pipeline parameters that apply to this node",
-            required=False,
-        )
-        parser.add_argument(
-            "-m",
-            "--parameter-pass-method",
-            dest="parameter_pass_method",
-            choices=["env"],
-            help="The method by which pipeline parameters should be applied to this node.",
-            required=False,
-        )
+        parser.add_argument("-f", "--file", dest="filepath", help="File to execute", required=True)
+        parser.add_argument("-o", "--outputs", dest="outputs", help="Files to output to object store", required=False)
+        parser.add_argument("-i", "--inputs", dest="inputs", help="Files to pull in from parent node", required=False)
         parsed_args = vars(parser.parse_args(args))
 
         # set pipeline name as global
@@ -744,13 +578,16 @@ class OpUtil(object):
 def main():
     # Configure logger format, level
     logging.basicConfig(
-        format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s", datefmt="%H:%M:%S", level=logging.DEBUG
+        format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s", datefmt="%H:%M:%S", level=logging.INFO
     )
     # Setup packages and gather arguments
     input_params = OpUtil.parse_arguments(sys.argv[1:])
     OpUtil.log_operation_info("starting operation")
     t0 = time.time()
-    OpUtil.package_install(user_volume_path=input_params.get("user-volume-path"))
+    # must be commented out in airgapped images if packages from
+    # https://github.com/elyra-ai/elyra/blob/main/etc/generic/requirements-elyra.txt
+    # already installed via central pip env during container build
+    OpUtil.package_install()
 
     # Create the appropriate instance, process dependencies and execute the operation
     file_op = FileOpBase.get_instance(**input_params)
@@ -758,9 +595,6 @@ def main():
     file_op.process_dependencies()
 
     file_op.execute()
-
-    # Process notebook | script metrics and KFP UI metadata
-    file_op.process_metrics_and_metadata()
 
     duration = time.time() - t0
     OpUtil.log_operation_info("operation completed", duration)
