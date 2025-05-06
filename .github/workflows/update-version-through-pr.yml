@@ -41,15 +41,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Yarn ${{ env.YARN_VERSION }}
-        run: |
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
-          yarn set version ${{ env.YARN_VERSION }}
-          git checkout package.json
-          yarn --version
+        uses: ./.github/actions/install-yarn
+        with:
+          version: ${{ env.YARN_VERSION }}
 
-      - name: Install dependencies
-        run: |
-          make yarn-install
+      - name: Install UI dependencies
+        uses: ./.github/actions/install-ui-dependencies
 
       - name: Update version to ${{ github.event.inputs.version }}
         id: update
