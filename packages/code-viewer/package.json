@@ -53,17 +53,17 @@
     "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@jupyterlab/application": "^4.2.5",
-    "@jupyterlab/apputils": "^4.2.5",
-    "@jupyterlab/codeeditor": "^4.2.5",
-    "@jupyterlab/ui-components": "^4.2.5",
-    "@lumino/algorithm": "*",
-    "@lumino/widgets": "^2.3.1"
+    "@jupyterlab/application": "^4.4.2",
+    "@jupyterlab/apputils": "^4.4.2",
+    "@jupyterlab/codeeditor": "^4.4.2",
+    "@jupyterlab/ui-components": "^4.4.2",
+    "@lumino/algorithm": "^2.0.3",
+    "@lumino/widgets": "^2.7.1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.2.5",
+    "@jupyterlab/builder": "^4.4.2",
     "rimraf": "~5.0.5",
-    "typescript": "~5.1.6"
+    "typescript": "~5.5.4"
   },
   "publishConfig": {
     "access": "public"
