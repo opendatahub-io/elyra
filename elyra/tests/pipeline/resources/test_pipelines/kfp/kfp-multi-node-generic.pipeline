@@ -24,7 +24,8 @@
               "kubernetes_shared_mem_size": {},
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
-              "filename": "consumer.ipynb"
+              "filename": "consumer.ipynb",
+              "disable_node_caching": true
             },
             "label": "consume a file",
             "ui_data": {
@@ -89,7 +90,8 @@
               "kubernetes_shared_mem_size": {},
               "kubernetes_tolerations": [],
               "mounted_volumes": [],
-              "filename": "consumer-producer.ipynb"
+              "filename": "consumer-producer.ipynb",
+              "disable_node_caching": false
             },
             "label": "",
             "ui_data": {
