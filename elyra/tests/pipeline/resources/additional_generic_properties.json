@@ -151,6 +151,15 @@
     },
     "default": []
   },
+  "disable_node_caching": {
+    "description": "Disable caching to force node re-execution in the target runtime environment.",
+    "enum": ["True", "False"],
+    "title": "Disable node caching",
+    "type": "string",
+    "uihints": {
+      "ui:placeholder": "Use runtime default"
+    }
+  },
   "env_vars": {
     "title": "Environment Variables",
     "description": "Environment variables to be set on the execution environment.",
