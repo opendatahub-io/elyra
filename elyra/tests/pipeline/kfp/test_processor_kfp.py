@@ -655,7 +655,7 @@ def test_disable_node_caching_at_pipeline_level(
     assert "components" in workflow_spec_docs[0]
     assert "platforms" in workflow_spec_docs[1]
 
-    caching_options = workflow_spec_docs[0]["root"]["dag"]["tasks"]["run-a-file"]["cachingOptions"]
+    caching_options = workflow_spec_docs[0]["root"]["dag"]["tasks"]["run-a-file"].get("cachingOptions", {})
     if disable_node_caching:
         assert caching_options == {}
     else:
@@ -750,17 +750,17 @@ def test_disable_node_caching_at_node_level(
         # - 1st task (produce a file): cache disabled since it is omitted so the value was inherited from the pipeline
         # - 2nd task (consumer-producer): cache enabled since it is explicitly enabled in the pipeline source
         # - 3rd task (consume a file): cache disabled since it is explicitly disabled in the pipeline source
-        assert tasks["run-a-file"]["cachingOptions"] == {}
-        assert tasks["run-a-file-2"]["cachingOptions"]["enableCache"] is True
-        assert tasks["run-a-file-3"]["cachingOptions"] == {}
+        assert tasks["run-a-file"].get("cachingOptions", {}) == {}
+        assert tasks["run-a-file-2"].get("cachingOptions", {}).get("enableCache") is True
+        assert tasks["run-a-file-3"].get("cachingOptions", {}) == {}
     else:
         # When Node Caching is enabled in the pipeline level, we expect:
         # - 1st task (produce a file): cache enabled since it is omitted so the value was inherited from the pipeline
         # - 2nd task (consumer-producer): cache enabled since it is explicitly enabled in the pipeline source
         # - 3rd task (consume a file): cache disabled since it is explicitly disabled in the pipeline source
-        assert tasks["run-a-file"]["cachingOptions"]["enableCache"] is True
-        assert tasks["run-a-file-2"]["cachingOptions"]["enableCache"] is True
-        assert tasks["run-a-file-3"]["cachingOptions"] == {}
+        assert tasks["run-a-file"].get("cachingOptions", {}).get("enableCache") is True
+        assert tasks["run-a-file-2"].get("cachingOptions", {}).get("enableCache") is True
+        assert tasks["run-a-file-3"].get("cachingOptions", {}) == {}
 
 
 @pytest.mark.parametrize(
