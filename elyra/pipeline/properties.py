@@ -370,7 +370,7 @@ class ElyraProperty(ABC):
 class DisableNodeCaching(ElyraProperty):
     """An ElyraProperty representing node cache preference"""
 
-    applies_to_generic = False
+    applies_to_generic = True
     applies_to_custom = True
 
     property_id = DISABLE_NODE_CACHING
