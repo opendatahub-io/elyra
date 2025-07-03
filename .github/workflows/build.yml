@@ -24,6 +24,7 @@ on:
 env:
   FORCE_COLOR: true
   NODE_VERSION: 22
+  YARN_VERSION: 3.5.0
   PYTHON_VERSION: 3.13
   QUAY_WORKBENCH_IMAGES_REPOSITORY: 'opendatahub/workbench-images'
   QUAY_WORKBENCH_IMAGES_TAG_PREFIX_CSV: 'jupyter-trustyai-ubi9-python-3.11-20241,cuda-jupyter-tensorflow-ubi9-python-3.11-20241'
