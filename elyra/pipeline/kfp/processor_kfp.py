@@ -886,10 +886,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     # Use Kubeflow Pipelines provided RUN_ID_PLACEHOLDER as run name
                     workflow_task["task_modifiers"]["set_run_name"] = RUN_ID_PLACEHOLDER
 
-                disable_node_caching = pipeline.pipeline_properties.get(pipeline_constants.DISABLE_NODE_CACHING)
-                if disable_node_caching:
-                    workflow_task["task_modifiers"]["disable_node_caching"] = disable_node_caching.selection
-
                 # Upload dependencies to cloud storage
                 self._upload_dependencies_to_object_store(
                     runtime_configuration, pipeline_name, operation, prefix=artifact_object_prefix
@@ -1188,12 +1184,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
     def add_disable_node_caching(self, instance: DisableNodeCaching, execution_object: Any, **kwargs) -> None:
         """Add DisableNodeCaching info to the execution object"""
-        # Force re-execution of the operation by setting staleness to zero days
-        # https://www.kubeflow.org/docs/components/pipelines/overview/caching/#managing-caching-staleness
-        if instance.selection:
-            execution_object["disable_node_caching"] = True
-        else:
-            execution_object["disable_node_caching"] = False
+        if instance is None:
+            return
+        execution_object["disable_node_caching"] = instance.selection
 
     def add_custom_shared_memory_size(self, instance: CustomSharedMemorySize, execution_object: Any, **kwargs) -> None:
         """Add CustomSharedMemorySize info to the execution object"""
