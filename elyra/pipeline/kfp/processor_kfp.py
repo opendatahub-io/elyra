@@ -773,6 +773,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     param.name: {"pipeline_parameter_reference": param.name} for param in task_parameters
                 }
 
+                # By default disable caching for the pipeline except if user set a value (RHOAIENG-26520)
+                if "disable_node_caching" not in workflow_task["task_modifiers"].keys():
+                    workflow_task["task_modifiers"]["disable_node_caching"] = True
+
                 component_definition = generic_component_template.render(
                     container_image=operation.runtime_image,
                     task_parameters=task_parameters,

@@ -577,19 +577,8 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_workflow_engine_test(
             / "test_pipelines"
             / "kfp"
             / "kfp-one-node-generic.pipeline",
-            "workflow_engine": WorkflowEngineType.ARGO,
-            "with_disable_node_caching": True,
-        },
-        {
-            "pipeline_file": Path(__file__).parent
-            / ".."
-            / "resources"
-            / "test_pipelines"
-            / "kfp"
-            / "kfp-one-node-generic.pipeline",
-            "workflow_engine": WorkflowEngineType.ARGO,
-            "with_disable_node_caching": False,
-        },
+            "workflow_engine": WorkflowEngineType.ARGO
+        }
     ],
     indirect=True,
 )
@@ -598,6 +587,7 @@ def test_disable_node_caching_at_pipeline_level(
 ):
     """
     This test validates the disable_node_caching option all the way to the compiled pipeline.
+    By default the node caching should be false (RHOAIENG-26520)
     """
 
     # Obtain artifacts from metadata_dependencies fixture
@@ -607,8 +597,6 @@ def test_disable_node_caching_at_pipeline_level(
     runtime_config = metadata_dependencies["runtime_config"]
     assert runtime_config is not None
     assert runtime_config.name == pipeline.runtime_config
-
-    disable_node_caching = metadata_dependencies["fixture_parameters"]["with_disable_node_caching"]
 
     workflow_engine = WorkflowEngineType.get_instance_by_value(runtime_config.metadata["engine"])
 
@@ -633,11 +621,7 @@ def test_disable_node_caching_at_pipeline_level(
         experiment_name=experiment_name,
     )
 
-    if disable_node_caching:
-        assert "set_caching_options(enable_caching=False)" in generated_dsl
-    else:
-        # Default behavior is to enable node caching
-        assert "set_caching_options" not in generated_dsl
+    assert "set_caching_options(enable_caching=False)" in generated_dsl
 
     # Compile the generated Python DSL
     processor._compile_pipeline_dsl(
@@ -656,10 +640,7 @@ def test_disable_node_caching_at_pipeline_level(
     assert "platforms" in workflow_spec_docs[1]
 
     caching_options = workflow_spec_docs[0]["root"]["dag"]["tasks"]["run-a-file"].get("cachingOptions", {})
-    if disable_node_caching:
-        assert caching_options == {}
-    else:
-        assert caching_options["enableCache"] is True
+    assert caching_options == {}
 
 
 @pytest.mark.parametrize(
@@ -755,10 +736,10 @@ def test_disable_node_caching_at_node_level(
         assert tasks["run-a-file-3"].get("cachingOptions", {}) == {}
     else:
         # When Node Caching is enabled in the pipeline level, we expect:
-        # - 1st task (produce a file): cache enabled since it is omitted so the value was inherited from the pipeline
+        # - 1st task (produce a file): cache disabled since it is omitted (RHOAIENG-26520)
         # - 2nd task (consumer-producer): cache enabled since it is explicitly enabled in the pipeline source
         # - 3rd task (consume a file): cache disabled since it is explicitly disabled in the pipeline source
-        assert tasks["run-a-file"].get("cachingOptions", {}).get("enableCache") is True
+        assert tasks["run-a-file"].get("cachingOptions", {}) == {}
         assert tasks["run-a-file-2"].get("cachingOptions", {}).get("enableCache") is True
         assert tasks["run-a-file-3"].get("cachingOptions", {}) == {}
 
