@@ -577,7 +577,7 @@ def test_generate_pipeline_dsl_compile_pipeline_dsl_workflow_engine_test(
             / "test_pipelines"
             / "kfp"
             / "kfp-one-node-generic.pipeline",
-            "workflow_engine": WorkflowEngineType.ARGO
+            "workflow_engine": WorkflowEngineType.ARGO,
         }
     ],
     indirect=True,
@@ -586,7 +586,7 @@ def test_disable_node_caching_at_pipeline_level(
     monkeypatch, processor: KfpPipelineProcessor, metadata_dependencies: Dict[str, Any], tmpdir
 ):
     """
-    This test validates the disable_node_caching option all the way to the compiled pipeline.
+    This test is to make sure that the caching is disabled at pipeline level
     By default the node caching should be false (RHOAIENG-26520)
     """
 
