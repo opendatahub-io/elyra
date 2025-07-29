@@ -1,0 +1,8 @@
+# https://docs.coderabbit.ai/getting-started/configure-coderabbit/?#configure-coderabbit-using-a-yaml-file
+---
+language: en-US
+early_access: false
+enable_free_tier: true
+reviews:
+  sequence_diagrams: true
+  poem: false
