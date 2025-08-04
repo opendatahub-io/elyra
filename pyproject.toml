@@ -29,7 +29,7 @@ dependencies = [
     "jupyter_server>=1.7.0",
     "jupyterlab~=4.4",  # comment out to use local jupyterlab
     "jupyterlab-lsp~=5.1.0",  # comment out to use local jupyterlab
-    "jupyterlab-git~=0.50.0",  # Avoid breaking 1.x changes
+    "jupyterlab-git~=0.51.2",  # Avoid breaking 1.x changes
     "jupyter-resource-usage~=1.1.0",
     "MarkupSafe>=2.1",
     "minio>=7.0.0,!=7.2.1",
@@ -169,8 +169,6 @@ ignore-vcs = true
 # Include data files with dist
 [tool.hatch.build.targets.wheel.shared-data]
 "labextensions/elyra_code_snippet_extension/labextension" = "share/jupyter/labextensions/@elyra/code-snippet-extension"
-# This extension is not part of ODH distribution
-# "labextensions/elyra_code_viewer_extension/labextension" = "share/jupyter/labextensions/@elyra/code-viewer-extension"
 "labextensions/elyra_metadata_common/labextension" = "share/jupyter/labextensions/@elyra/metadata-common"
 "labextensions/elyra_metadata_extension/labextension" = "share/jupyter/labextensions/@elyra/metadata-extension"
 "labextensions/elyra_pipeline_editor_extension/labextension" = "share/jupyter/labextensions/@elyra/pipeline-editor-extension"

@@ -2,6 +2,61 @@
 
 A summary of new feature highlights is located on the [GitHub release page](https://github.com/elyra-ai/elyra/releases).
 
+## Release 4.0.0rc5 - 07/24/2025
+
+- Update jupyterlab-git to 0.51.2 to fix vulnerability - [#3319](https://github.com/elyra-ai/elyra/pull/3319)
+
+## Release 4.0.0rc4 - 07/23/2025
+
+- Bump form-data from 4.0.0 to 4.0.4 - [#3317](https://github.com/elyra-ai/elyra/pull/3317)
+- Bump requests from 2.32.3 to 2.32.4 in /etc/generic - [#3314](https://github.com/elyra-ai/elyra/pull/3314)
+- Fix flake8 warnings in the CI - [#3315](https://github.com/elyra-ai/elyra/pull/3315)
+- Bump tornado from 6.4.2 to 6.5.1 in /etc/generic - [#3313](https://github.com/elyra-ai/elyra/pull/3313)
+- Add support to Python 3.12 and 3.13 - [#3311](https://github.com/elyra-ai/elyra/pull/3311)
+- Bump braces from 3.0.2 to 3.0.3 - [#3309](https://github.com/elyra-ai/elyra/pull/3309)
+- Bump JupyterLab packages to v4.4 - [#3308](https://github.com/elyra-ai/elyra/pull/3308)
+- Pin click package - [#3307](https://github.com/elyra-ai/elyra/pull/3307)
+- Use ubuntu-latest on codeql-analysis workflow - [#3304](https://github.com/elyra-ai/elyra/pull/3304)
+- Suppress flake8 F824 warning to fix the CI - [#3300](https://github.com/elyra-ai/elyra/pull/3300)
+
+## Release 4.0.0rc2 - 03/17/2025
+
+Our 4.0.0 release candidate 2 includes the following high-level changes
+
+- Update JupyterLab version compatibility all way to 4.3.x  - [#3293](https://github.com/elyra-ai/elyra/pull/3293)
+- Switch from elyra-code-viewer to jupyterlab-code-viewer - [#3265](https://github.com/elyra-ai/elyra/pull/3265)
+
+See the full changelog below:
+
+- Switch from elyra-code-viewer to jupyterlab-code-viewer - [#3265](https://github.com/elyra-ai/elyra/pull/3265)
+- Bump express from 4.18.1 to 4.21.2 - [#3297](https://github.com/elyra-ai/elyra/pull/3297)
+- Bump @babel/runtime-corejs3 from 7.19.1 to 7.26.10 - [#3296](https://github.com/elyra-ai/elyra/pull/3296)
+- Bump elliptic from 6.5.4 to 6.6.1 - [#3286](https://github.com/elyra-ai/elyra/pull/3286)
+- Bump axios from 1.7.5 to 1.8.3 - [#3295](https://github.com/elyra-ai/elyra/pull/3295)
+- Bump jinja2 from 3.1.5 to 3.1.6 in /etc/generic - [#3294](https://github.com/elyra-ai/elyra/pull/3294)
+- Pin Yarn version - [#3292](https://github.com/elyra-ai/elyra/pull/3292)
+- Updates Jupyterlab version compatibility to <4.4 - [#3293](https://github.com/elyra-ai/elyra/pull/3293)
+- Fix yarn.lock after release - [#3289](https://github.com/elyra-ai/elyra/pull/3289)
+- Update yarn.lock after release - [#3287](https://github.com/elyra-ai/elyra/pull/3287)
+
+## Release 4.0.0rc1 - 02/15/2025
+
+- Add codecov token to upload reports github action - [#3283](https://github.com/elyra-ai/elyra/pull/3283)
+- Fix references to KF_PIPELINES_SSL_SA_CERTS - [#3284](https://github.com/elyra-ai/elyra/pull/3284)
+- Fix main icon replacement - [#3285](https://github.com/elyra-ai/elyra/pull/3285)
+- Update ToolbarButton widget library - [#3282](https://github.com/elyra-ai/elyra/pull/3282)
+- Add missing props and files for Code Viewer, R Editor and Scala Editor extensions - [#3280](https://github.com/elyra-ai/elyra/pull/3280)
+- Add test coverage support through CodeCov - [#3281](https://github.com/elyra-ai/elyra/pull/3281)
+- Add ELYRA_GITHUB_REPO env var - [#3278](https://github.com/elyra-ai/elyra/pull/3278)
+- Replace 'any' with correct types in typescript code - [#85](https://github.com/elyra-ai/elyra/pull/85)
+- Remove Python 3.8 support as it reached EOL - [#3277](https://github.com/elyra-ai/elyra/pull/3277)
+- Upgrade Cypress v6 -> v13 - [#3275](https://github.com/elyra-ai/elyra/pull/3275)
+- Bump Node.js version to 22 LTS - [#3276](https://github.com/elyra-ai/elyra/pull/3276)
+- Update yarn.lock after release candidate updates - [#3274](https://github.com/elyra-ai/elyra/pull/3274)
+- Allow production builds for UI packages - [#3269](https://github.com/elyra-ai/elyra/pull/3269)
+- Fix properties not being added in the Pipeline Properties tab - [#3270](https://github.com/elyra-ai/elyra/pull/3270)
+- Extract common code and fail build if lock is modified - [#3272](https://github.com/elyra-ai/elyra/pull/3272)
+
 ## Release 4.0.0rc0 - 01/03/2025
 
 Our 4.0.0 release candidate 0 includes the following high-level changes
