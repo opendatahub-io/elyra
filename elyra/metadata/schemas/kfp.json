@@ -50,7 +50,7 @@
           "format": "uri",
           "uihints": {
             "category": "Data Science Pipelines",
-            "ui:placeholder": "https://your-data-science-pipeline-service:port/pipeline"
+            "ui:placeholder": "https://your-data-science-pipeline-service:port"
           }
         },
         "public_api_endpoint": {
@@ -60,7 +60,7 @@
           "format": "uri",
           "uihints": {
             "category": "Data Science Pipelines",
-            "ui:placeholder": "https://your-data-science-pipeline-service:port/pipeline"
+            "ui:placeholder": "https://your-data-science-pipeline-service:port"
           }
         },
         "user_namespace": {
