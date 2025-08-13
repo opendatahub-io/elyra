@@ -82,8 +82,10 @@ def format_validation_errors_message(validation_response) -> str:
     :return: Formatted error message string
     """
     issues = validation_response.to_json().get("issues", [])
+    if not issues:
+        return "Issues found in pipeline"
     message = ""
-    
+
     for issue in issues:
         data = issue.get("data", {})
         node_name = data.get("nodeName")
