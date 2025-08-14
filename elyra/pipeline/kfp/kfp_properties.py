@@ -79,13 +79,17 @@ class KfpPipelineParameter(PipelineParameter):
     property_attributes = [
         ListItemPropertyAttribute(
             attribute_id="name",
-            description="The name of the parameter. This must be a valid Python identifier and not a keyword.",
+            description=(
+                "The name of the parameter. "
+                "This must be a valid Python identifier and not a keyword. "
+                "Any letters must be lowercase, per Kubernetes documentation."
+            ),
             display_name="Parameter Name",
-            allowed_input_types=[PropertyInputType(base_type="str", placeholder="param_1")],
+            allowed_input_types=[PropertyInputType(base_type="str", placeholder="param-1")],
             hidden=False,
             required=True,
             use_in_key=True,
-            pattern="^[a-zA-Z][a-zA-Z0-9_]*$",
+            pattern="^[a-z][a-z0-9.-]*$",
         ),
         ListItemPropertyAttribute(
             attribute_id="description",
