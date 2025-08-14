@@ -81,7 +81,7 @@ class KfpPipelineParameter(PipelineParameter):
             attribute_id="name",
             description=(
                 "The name of the parameter. "
-                "This must be a valid Python identifier and not a keyword. " 
+                "This must be a valid Python identifier and not a keyword. "
                 "Any letters must be lowercase, per Kubernetes documentation."
             ),
             display_name="Parameter Name",
