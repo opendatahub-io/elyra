@@ -74,6 +74,29 @@ def get_runtime_processor_type(runtime_type: str, log: Logger, request_path: str
     return None
 
 
+def format_validation_errors_message(validation_response) -> str:
+    """
+    Format validation errors into a readable message.
+
+    :param validation_response: ValidationResponse object containing validation issues
+    :return: Formatted error message string
+    """
+    issues = validation_response.to_json().get("issues", [])
+    if not issues:
+        return "Issues found in pipeline"
+    message = ""
+
+    for issue in issues:
+        data = issue.get("data", {})
+        node_name = data.get("nodeName")
+        if node_name:
+            message += f"Node: {node_name}\n"
+        message += issue.get("message", "Unknown error") + "\n" + "\n"
+    if message:
+        message = message[:-2]
+    return message
+
+
 class PipelineExportHandler(HttpErrorMixin, APIHandler):
     """Handler to expose REST API to export pipelines"""
 
@@ -117,7 +140,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
             json_msg = json.dumps(
                 {
                     "reason": responses.get(400),
-                    "message": "Errors found in pipeline",
+                    "message": format_validation_errors_message(response),
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "issues": response.to_json().get("issues"),
                 }
@@ -164,7 +187,7 @@ class PipelineSchedulerHandler(HttpErrorMixin, APIHandler):
             json_msg = json.dumps(
                 {
                     "reason": responses.get(400),
-                    "message": "Errors found in pipeline",
+                    "message": format_validation_errors_message(response),
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "issues": response.to_json().get("issues"),
                 }
