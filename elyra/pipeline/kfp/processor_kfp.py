@@ -1167,20 +1167,22 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         """
         Sanitize a component property or pipeline parameter name.
 
-        Behavior is mirrored from how Kubeflow 1.X sanitizes identifier names:
-        - https://github.com/kubeflow/pipelines/blob/1.8.1/sdk/python/kfp/components/_naming.py#L32-L42
-        - https://github.com/kubeflow/pipelines/blob/1.8.1/sdk/python/kfp/components/_naming.py#L49-L50
+        Behavior is updated to comply with Kubeflow 2.x pipeline parameters.
         """
         normalized_name = name.lower()
 
-        # remove non-word characters
-        normalized_name = re.sub(r"[\W_]", " ", normalized_name)
+        # remove non-word characters (but allow underscore - changed from previous behavior)
+        normalized_name = re.sub(r"[\W]", " ", normalized_name)
 
         # no double spaces, leading or trailing spaces
         normalized_name = re.sub(" +", " ", normalized_name).strip()
 
         # no leading digits
         if re.match(r"\d", normalized_name):
+            normalized_name = "n" + normalized_name
+
+        # no leading underscore
+        if re.match(r"^_", normalized_name):
             normalized_name = "n" + normalized_name
 
         return normalized_name.replace(" ", "_")
