@@ -68,7 +68,7 @@ Cypress.Commands.add('createRuntimeConfig', ({ type } = {}): void => {
   cy.findByLabelText(/^display name/i).type(`${type} Test Runtime`);
 
   if (type === 'kfp') {
-    cy.findByLabelText(/data science .* endpoint\*/i).type(
+    cy.findByLabelText(/ai .* endpoint\*/i).type(
       'https://kubernetes-service.ibm.com/pipeline'
     );
   } else {
