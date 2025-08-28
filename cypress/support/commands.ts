@@ -147,7 +147,7 @@ Cypress.Commands.add(
       switch (type) {
         case 'kfp':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title="Data Science Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title="AI Pipeline Editor"]'
           ).click();
           break;
         case 'airflow':
