@@ -770,7 +770,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 # Set parameters specified for this task and add each as a task input
                 task_parameters = [param for param in pipeline.parameters if param.name in operation.parameters]
                 workflow_task["task_inputs"] = {
-                    param.name: {"pipeline_parameter_reference": param.name} for param in task_parameters
+                    self._sanitize_param_name(param.name): {"pipeline_parameter_reference": param.name}
+                    for param in task_parameters
                 }
 
                 component_definition = generic_component_template.render(
