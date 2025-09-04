@@ -68,7 +68,7 @@ Cypress.Commands.add('createRuntimeConfig', ({ type } = {}): void => {
   cy.findByLabelText(/^display name/i).type(`${type} Test Runtime`);
 
   if (type === 'kfp') {
-    cy.findByLabelText(/data science .* endpoint\*/i).type(
+    cy.findByLabelText(/ai .* endpoint\*/i).type(
       'https://kubernetes-service.ibm.com/pipeline'
     );
   } else {
@@ -147,7 +147,7 @@ Cypress.Commands.add(
       switch (type) {
         case 'kfp':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title="Data Science Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title="AI Pipeline Editor"]'
           ).click();
           break;
         case 'airflow':
