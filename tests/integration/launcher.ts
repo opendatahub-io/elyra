@@ -33,7 +33,7 @@ describe('Elyra launcher is in use', () => {
     );
     // One specific runtime pipeline editor extension is available
     cy.get(
-      '.jp-LauncherCard[data-category="Elyra"][title="Data Science Pipeline Editor"]:visible'
+      '.jp-LauncherCard[data-category="Elyra"][title="AI Pipeline Editor"]:visible'
     );
     // Script editor extension is available
     cy.get(

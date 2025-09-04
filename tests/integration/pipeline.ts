@@ -701,7 +701,7 @@ describe('Pipeline Editor tests', () => {
 
   it('kfp pipeline toolbar should display expected runtime', () => {
     cy.createPipeline({ type: 'kfp' });
-    cy.get('.toolbar-icon-label').contains(/runtime: data science pipelines/i);
+    cy.get('.toolbar-icon-label').contains(/runtime: ai pipelines/i);
   });
 
   it('should block unsupported files', () => {
