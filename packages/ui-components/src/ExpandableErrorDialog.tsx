@@ -19,6 +19,7 @@ import * as React from 'react';
 import { ExpandableComponent } from './ExpandableComponent';
 
 const MESSAGE_DISPLAY = 'elyra-errorDialog-messageDisplay';
+const MESSAGE_CONTAINER = 'elyra-errorDialog-messageContainer';
 const ERROR_DIALOG_WIDTH = 600;
 const ERROR_DIALOG_HEIGHT = 400;
 const JP_DIALOG_CONTENT = 'jp-Dialog-content';
@@ -71,7 +72,7 @@ export const ExpandableErrorDialog: React.FC<IErrorDialogProps> = ({
 
   return (
     <div className={MESSAGE_DISPLAY}>
-      <div>{message}</div>
+      <div className={MESSAGE_CONTAINER}>{message}</div>
       {traceback ? (
         <ExpandableComponent
           displayName="Error details: "
@@ -81,7 +82,9 @@ export const ExpandableErrorDialog: React.FC<IErrorDialogProps> = ({
           <pre>{traceback}</pre>
         </ExpandableComponent>
       ) : null}
-      <div>{defaultMessage}</div>
+      <div>
+        <strong>{defaultMessage}</strong>
+      </div>
     </div>
   );
 };

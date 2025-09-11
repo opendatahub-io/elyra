@@ -97,10 +97,10 @@
 
 .elyra-errorDialog-messageDisplay pre {
   min-height: 125px;
-  height: 100%;
-  width: 100%;
   resize: none;
-  overflow-x: scroll;
+  height: auto;
+  width: auto;
+  overflow: visible;
 }
 
 .elyra-errorDialog-messageDisplay {
@@ -117,6 +117,22 @@
   flex: 1;
   min-height: 0px;
   flex-direction: column;
+}
+
+.elyra-errorDialog-messageContainer {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid var(--jp-border-color2);
+  border-radius: 2px;
+  color: var(--jp-ui-font-color1);
+  background-color: var(--jp-layout-color1);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-code-font-size);
 }
 
 /* temporary fix until this is addressed in jupyterlab */
