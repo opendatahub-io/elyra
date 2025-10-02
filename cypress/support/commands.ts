@@ -22,6 +22,12 @@ import 'cypress-real-events/support';
 
 import '../utils/snapshots/add-commands';
 
+Cypress.Commands.add('installPythonKernel', (): void => {
+  cy.exec('python -m ipykernel install --user --name python3 --display-name "Python 3 (ipykernel)"', {
+    failOnNonZeroExit: false
+  });
+});
+
 Cypress.Commands.add('installRuntimeConfig', ({ type } = {}): void => {
   const kfpRuntimeInstallCommand =
     'elyra-metadata create runtimes \
@@ -68,7 +74,7 @@ Cypress.Commands.add('createRuntimeConfig', ({ type } = {}): void => {
   cy.findByLabelText(/^display name/i).type(`${type} Test Runtime`);
 
   if (type === 'kfp') {
-    cy.findByLabelText(/ai .* endpoint\*/i).type(
+    cy.findByLabelText(/api endpoint\*/i).type(
       'https://kubernetes-service.ibm.com/pipeline'
     );
   } else {
@@ -147,17 +153,17 @@ Cypress.Commands.add(
       switch (type) {
         case 'kfp':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title="Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
           ).click();
           break;
         case 'airflow':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title="Apache Airflow Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
           ).click();
           break;
         default:
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title="Generic Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
           ).click();
           break;
       }
