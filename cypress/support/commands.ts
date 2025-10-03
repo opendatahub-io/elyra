@@ -22,12 +22,6 @@ import 'cypress-real-events/support';
 
 import '../utils/snapshots/add-commands';
 
-Cypress.Commands.add('installPythonKernel', (): void => {
-  cy.exec('python -m ipykernel install --user --name python3 --display-name "Python 3 (ipykernel)"', {
-    failOnNonZeroExit: false
-  });
-});
-
 Cypress.Commands.add('installRuntimeConfig', ({ type } = {}): void => {
   const kfpRuntimeInstallCommand =
     'elyra-metadata create runtimes \
@@ -153,17 +147,17 @@ Cypress.Commands.add(
       switch (type) {
         case 'kfp':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title="Pipeline Editor"]'
           ).click();
           break;
         case 'airflow':
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title="Apache Airflow Pipeline Editor"]'
           ).click();
           break;
         default:
           cy.get(
-            '.jp-LauncherCard[data-category="Elyra"][title*="Pipeline Editor"]'
+            '.jp-LauncherCard[data-category="Elyra"][title="Generic Pipeline Editor"]'
           ).click();
           break;
       }
