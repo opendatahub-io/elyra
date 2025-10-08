@@ -76,7 +76,7 @@ class ComponentCatalogsDisplay extends MetadataDisplay<IMetadataDisplayProps> {
     return (
       <div>
         <h6>Runtime Type</h6>
-        {'AI_PIPELINES'}
+        {'PIPELINES'}
         <br />
         <br />
         <h6>Description</h6>
