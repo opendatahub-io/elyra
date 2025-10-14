@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/meta-schema.json",
   "$id": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/kfp.json",
-  "title": "Data Science Pipelines",
+  "title": "Pipelines",
   "name": "kfp",
   "schemaspace": "runtimes",
   "schemaspace_id": "130b8e00-de7c-4b32-b553-b4a52824a3b5",
   "metadata_class_name": "elyra.pipeline.kfp.kfp_metadata.KfpMetadata",
   "runtime_type": "KUBEFLOW_PIPELINES",
   "uihints": {
-    "title": "Data Science Pipelines runtimes",
+    "title": "Pipelines runtimes",
     "icon": "elyra:runtimes",
     "reference_url": "https://elyra.readthedocs.io/en/latest/user_guide/runtime-conf.html"
   },
@@ -20,8 +20,8 @@
       "const": "kfp"
     },
     "display_name": {
-      "title": "Display Name",
-      "description": "Display name of this Data Science Pipelines configuration",
+      "title": "Display name",
+      "description": "Display name of this pipelines configuration",
       "type": "string",
       "minLength": 1
     },
@@ -40,47 +40,47 @@
         },
         "description": {
           "title": "Description",
-          "description": "Description of this Data Science Pipelines configuration",
+          "description": "Description of this pipelines configuration",
           "type": "string"
         },
         "api_endpoint": {
-          "title": "Data Science Pipelines API Endpoint",
-          "description": "The Data Science Pipelines API endpoint",
+          "title": "API endpoint",
+          "description": "The pipelines API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Data Science Pipelines",
-            "ui:placeholder": "https://your-data-science-pipeline-service:port"
+            "category": "Pipelines",
+            "ui:placeholder": "https://your-pipeline-service:port"
           }
         },
         "public_api_endpoint": {
-          "title": "Public Data Science Pipelines API Endpoint",
-          "description": "The public Data Science Pipelines API endpoint",
+          "title": "Public API endpoint",
+          "description": "The public pipelines API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Data Science Pipelines",
-            "ui:placeholder": "https://your-data-science-pipeline-service:port"
+            "category": "Pipelines",
+            "ui:placeholder": "https://your-pipeline-service:port"
           }
         },
         "user_namespace": {
-          "title": "Data Science Pipelines User Namespace",
-          "description": "The Data Science Pipelines user namespace used to create experiments",
+          "title": "User namespace",
+          "description": "The pipelines user namespace used to create experiments",
           "type": "string",
           "pattern": "^[a-z0-9][-a-z0-9]*[a-z0-9]$",
           "maxLength": 63,
           "uihints": {
-            "category": "Data Science Pipelines"
+            "category": "Pipelines"
           }
         },
         "engine": {
-          "title": "Data Science Pipelines engine",
-          "description": "The Data Science Pipelines engine in use",
+          "title": "Engine",
+          "description": "The pipelines engine in use",
           "type": "string",
           "enum": ["Argo"],
           "default": "Argo",
           "uihints": {
-            "category": "Data Science Pipelines"
+            "category": "Pipelines"
           }
         },
         "auth_type": {
@@ -90,24 +90,24 @@
           "enum": ["{AUTH_PROVIDER_PLACEHOLDERS}"],
           "default": "{DEFAULT_AUTH_PROVIDER_PLACEHOLDER}",
           "uihints": {
-            "category": "Data Science Pipelines"
+            "category": "Pipelines"
           }
         },
         "api_username": {
-          "title": "Data Science Pipelines API Endpoint Username",
-          "description": "The Data Science Pipelines API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
+          "title": "API endpoint username",
+          "description": "The pipelines API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
-            "category": "Data Science Pipelines"
+            "category": "Pipelines"
           }
         },
         "api_password": {
-          "title": "Data Science Pipelines API Endpoint Password Or Token",
+          "title": "API endpoint password or token",
           "description": "Password or token to be used for authentication. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
             "ui:field": "@elyra/metadata-extension:plugin.password",
-            "category": "Data Science Pipelines"
+            "category": "Pipelines"
           }
         },
         "cos_endpoint": {
@@ -184,7 +184,7 @@
         },
         "tags": {
           "title": "Tags",
-          "description": "Tags for categorizing Data Science Pipelines",
+          "description": "Tags for categorizing pipelines",
           "uniqueItems": true,
           "type": "array",
           "items": {

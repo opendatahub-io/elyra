@@ -237,10 +237,10 @@ const extension: JupyterFrontEndPlugin<void> = {
               return `${contextMenuPrefix}Generic ${PIPELINE_EDITOR}`;
             }
             if (args.isMenu) {
-              return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+              return PIPELINE_EDITOR;
             }
             if (args.isContextMenu) {
-              return `New ${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+              return `New ${PIPELINE_EDITOR}`;
             }
             return PIPELINE_EDITOR;
           },
@@ -248,7 +248,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             if (args.runtimeType?.id === 'LOCAL') {
               return `Generic ${PIPELINE_EDITOR}`;
             }
-            return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+            return PIPELINE_EDITOR;
           },
           iconLabel: (args: any) => {
             if (args.isPalette) {
@@ -257,7 +257,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             if (args.runtimeType?.id === 'LOCAL') {
               return `Generic ${PIPELINE_EDITOR}`;
             }
-            return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+            return PIPELINE_EDITOR;
           },
           icon: (args: any) => {
             if (args.isPalette) {

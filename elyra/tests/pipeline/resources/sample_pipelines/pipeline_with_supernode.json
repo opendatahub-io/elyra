@@ -105,7 +105,7 @@
           "type": "execution_node",
           "op": "execute-notebook-node",
           "app_data": {
-            "label": "data_science_aws",
+            "label": "aws",
             "component_parameters": {
               "filename": "demo-pipelines/data_science_aws.ipynb",
               "runtime_image": "elyra/tensorflow:1.15.2-py3",
@@ -113,7 +113,7 @@
               "include_subdirectories": false
             },
             "ui_data": {
-              "label": "data_science_aws",
+              "label": "aws",
               "image": "useDefaultIcon",
               "x_pos": 814.85107421875,
               "y_pos": 104.74483108520508,
