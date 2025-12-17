@@ -78,6 +78,11 @@ Documentation = "https://elyra.readthedocs.io/en/latest"
 Homepage = "https://github.com/opendatahub-io/elyra"
 
 [project.optional-dependencies]
+dev = [
+    "flake8>=3.5.0,<7.2.0",
+    "flake8-import-order>=0.18.1",
+    "flake8-pyproject>=1.2.4",
+]
 test = [
     "elyra-examples-kfp-catalog",
     "git-python",
