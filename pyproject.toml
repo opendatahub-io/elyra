@@ -169,6 +169,9 @@ include = [
     "elyra/*",
     "labextensions/**/*",
 ]
+exclude = [
+    "elyra/tests",
+]
 ignore-vcs = true
 
 # Include data files with dist
