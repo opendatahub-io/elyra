@@ -70,7 +70,7 @@ class PipelineProcessorRegistry(SingletonConfigurable):
                 self.log.error(
                     f"Error registering {processor.name} processor "
                     f'"{processor.module_name}.{processor.object_name}" - {err}',
-                    exc_info=True
+                    exc_info=True,
                 )
 
     def _add_processor(self, processor_instance):
