@@ -93,7 +93,7 @@
             "label": "Filter text",
             "component_parameters": {
               "runtime_image": "alpine",
-              "component_source": "/Users/akchin/opt/anaconda3/envs/test-package/lib/python3.10/site-packages/elyra/pipeline/resources/kfp/filter_text_using_shell_and_grep/component.yaml",
+              "component_source": "/Users/akchin/opt/anaconda3/envs/test-package/lib/python3.11/site-packages/elyra/pipeline/resources/kfp/filter_text_using_shell_and_grep/component.yaml",
               "component_source_type": "filename",
               "text": {
                 "widget": "inputpath",
