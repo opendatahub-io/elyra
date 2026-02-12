@@ -26,8 +26,8 @@ RUN /bin/bash <<EOF
         CONDA_ARCH=${TARGETARCH:-"x86_64"}
     fi
     # CONDA_ARCH expansion needs to be escaped to avoid docker expanding the variable before calling the shell
-    echo "wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh"
-    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh
+    echo "wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py311_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh"
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py311_24.5.0-0-Linux-\${CONDA_ARCH}.sh -O ~/miniconda.sh
     /bin/bash ~/miniconda.sh -b -p /opt/conda
     rm ~/miniconda.sh
     /opt/conda/bin/conda clean -tipy
