@@ -820,7 +820,7 @@ class PipelineValidationManager(SingletonConfigurable):
 
         if len(node_label) > label_name_max_length:
             response.add_message(
-                severity=ValidationSeverity.Warning,
+                severity=ValidationSeverity.Error,
                 message_type="invalidNodeLabel",
                 message="Property value exceeds the max length allowed "
                 "({label_name_max_length}). This value may be truncated "
@@ -829,7 +829,7 @@ class PipelineValidationManager(SingletonConfigurable):
             )
         if not matched or matched.group(0) != node_label:
             response.add_message(
-                severity=ValidationSeverity.Warning,
+                severity=ValidationSeverity.Error,
                 message_type="invalidNodeLabel",
                 message="The node label contains characters that may be replaced "
                 "by the runtime service. Node labels should "
