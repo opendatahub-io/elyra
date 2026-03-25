@@ -213,6 +213,26 @@ def test_main_method_with_wildcard_outputs(monkeypatch, s3_setup, tmpdir):
     main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict)
 
 
+def test_main_method_with_url_encoded_wildcard_outputs(monkeypatch, s3_setup, tmpdir):
+    """Test that URL-encoded wildcards in output paths are properly decoded.
+
+    This test verifies the fix for the bug where asterisks (*) in output file paths
+    get URL-encoded to %2A, causing glob pattern matching to fail.
+    """
+    argument_dict = {
+        "cos-endpoint": "http://" + MINIO_HOST_PORT,
+        "cos-bucket": "test-bucket",
+        "cos-directory": "test-directory",
+        "cos-dependencies-archive": "test-archive.tgz",
+        "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
+        "inputs": "test-file.txt;test,file.txt",
+        # Use URL-encoded wildcard pattern (e.g., model/* becomes model/%2A)
+        "outputs": "test-file/%2A",
+        "user-volume-path": None,
+    }
+    main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict)
+
+
 def test_main_method_with_dir_outputs(monkeypatch, s3_setup, tmpdir):
     argument_dict = {
         "cos-endpoint": "http://" + MINIO_HOST_PORT,

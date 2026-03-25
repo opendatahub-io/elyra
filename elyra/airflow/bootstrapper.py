@@ -26,6 +26,7 @@ from typing import Any
 from typing import Optional
 from typing import Type
 from typing import TypeVar
+from urllib.parse import unquote
 from urllib.parse import urlparse
 
 from packaging import version
@@ -150,7 +151,10 @@ class FileOpBase(ABC):
         if outputs:
             output_list = outputs.split(INOUT_SEPARATOR)
             for file in output_list:
-                self.process_output_file(file.strip())
+                # URL-decode the output file path to handle wildcard characters
+                # that may have been encoded (e.g., * -> %2A)
+                decoded_file = unquote(file.strip())
+                self.process_output_file(decoded_file)
             duration = time.time() - t0
             OpUtil.log_operation_info("outputs processed", duration)
         else:
