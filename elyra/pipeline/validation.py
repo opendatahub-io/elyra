@@ -776,7 +776,7 @@ class PipelineValidationManager(SingletonConfigurable):
                         "value": normalized_path,
                     },
                 )
-        elif not os.path.exists(normalized_path) or not os.path.isfile(normalized_path):
+        elif not os.path.exists(normalized_path) or not (os.path.isfile(normalized_path) or os.path.isdir(normalized_path)):
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidFilePath",
@@ -788,9 +788,9 @@ class PipelineValidationManager(SingletonConfigurable):
                     "value": normalized_path,
                 },
             )
-        elif not binary_file_ok:
+        elif not binary_file_ok and os.path.isfile(normalized_path):
             # Validate that the file is utf-8 encoded by trying to read it
-            # as text file
+            # as text file (only applicable to files, not directories)
             try:
                 with open(normalized_path, "r") as fh:
                     fh.read()
