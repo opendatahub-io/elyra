@@ -17,7 +17,6 @@ import json
 import os
 import sys
 from typing import Dict
-from typing import List
 
 from jsonschema import ValidationError
 

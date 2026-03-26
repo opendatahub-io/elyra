@@ -776,7 +776,9 @@ class PipelineValidationManager(SingletonConfigurable):
                         "value": normalized_path,
                     },
                 )
-        elif not os.path.exists(normalized_path) or not (os.path.isfile(normalized_path) or os.path.isdir(normalized_path)):
+        elif not os.path.exists(normalized_path) or not (
+            os.path.isfile(normalized_path) or os.path.isdir(normalized_path)
+        ):
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidFilePath",
