@@ -1139,8 +1139,8 @@ def test_main_method_with_run_id_enabled(monkeypatch, s3_setup, tmpdir):
         "cos-directory": "test-directory",
         "cos-dependencies-archive": "test-archive.tgz",
         "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
-        "inputs": "test-file.txt",
-        "outputs": "test-file/test-file-copy.txt",
+        "inputs": "test-file.txt;test,file.txt",  # Both files needed by the notebook
+        "outputs": "test-file/test-file-copy.txt;test-file/test,file/test,file-copy.txt",
         "user-volume-path": None,
         "cos-output-append-run-id": True,  # Enable the feature
     }
@@ -1157,19 +1157,28 @@ def test_main_method_with_run_id_enabled(monkeypatch, s3_setup, tmpdir):
         file_path=os.path.join(RESOURCES_DIR, "test-archive.tgz"),
     )
 
-    # Upload input file to run-specific path
+    # Upload both input files to run-specific paths
     s3_setup.fput_object(
         bucket_name=argument_dict["cos-bucket"],
         object_name="test-directory/run-full-test-123/test-file.txt",  # Run-specific path
         file_path=os.path.join(RESOURCES_DIR, "test-requirements-elyra.txt"),
     )
+    s3_setup.fput_object(
+        bucket_name=argument_dict["cos-bucket"],
+        object_name="test-directory/run-full-test-123/test,file.txt",  # Run-specific path
+        file_path=os.path.join(RESOURCES_DIR, "test-bad-requirements-elyra.txt"),
+    )
 
     with tmpdir.as_cwd():
         bootstrapper.main()
 
-        # Verify output was uploaded to run-specific path
-        output_path = "test-directory/run-full-test-123/test-file/test-file-copy.txt"
-        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=output_path)
+        # Verify outputs were uploaded to run-specific paths
+        output_path1 = "test-directory/run-full-test-123/test-file/test-file-copy.txt"
+        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=output_path1)
+        assert stat is not None
+
+        output_path2 = "test-directory/run-full-test-123/test-file/test,file/test,file-copy.txt"
+        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=output_path2)
         assert stat is not None
 
         # Verify notebook outputs also uploaded to run-specific path
