@@ -699,6 +699,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             artifact_object_prefix = join_paths(
                 pipeline.pipeline_properties.get(pipeline_constants.COS_OBJECT_PREFIX), pipeline_instance_id
             )
+            # - check if output should append run ID to avoid overwrites
+            cos_output_append_run_id = pipeline.pipeline_properties.get(
+                pipeline_constants.COS_OUTPUT_APPEND_RUN_ID, False
+            )
             # - load the generic component definition template
             template_env = Environment(loader=PackageLoader("elyra", "templates/kubeflow/v2"))
             generic_component_template = template_env.get_template("generic_component_definition_template.jinja2")
@@ -779,6 +783,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                         cos_outputs=operation.outputs,
                         task_parameters=task_parameters,
                         is_crio_runtime=is_crio_runtime,
+                        cos_output_append_run_id=cos_output_append_run_id,
                     ),
                 )
                 workflow_task["component_definition"] = component_definition
@@ -1044,6 +1049,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_outputs: Optional[List[str]] = [],
         task_parameters: Optional[List[PipelineParameter]] = None,
         is_crio_runtime: bool = False,
+        cos_output_append_run_id: bool = False,
     ) -> List[str]:
         """
         Compose the container command arguments for a generic component, taking into
@@ -1149,6 +1155,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             bootstrapper_command.append(
                 f"--pipeline-parameters '{parameter_str}' --parameter-pass-method '{self.parameter_pass_method}' "
             )
+
+        # Add flag to append run ID to output paths if enabled
+        if cos_output_append_run_id:
+            bootstrapper_command.append("--cos-output-append-run-id ")
 
         command_args.append("".join(bootstrapper_command))
 
