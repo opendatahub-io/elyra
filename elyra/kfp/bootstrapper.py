@@ -320,7 +320,9 @@ class FileOpBase(ABC):
             f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}", duration
         )
 
-    def put_file_to_object_storage(self, file_to_upload: str, object_name: Optional[str] = None, use_run_id: bool = True) -> None:
+    def put_file_to_object_storage(
+        self, file_to_upload: str, object_name: Optional[str] = None, use_run_id: bool = True
+    ) -> None:
         """Utility function to put files into an object storage
 
         :param file_to_upload: filename
