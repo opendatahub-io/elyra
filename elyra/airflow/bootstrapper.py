@@ -131,7 +131,9 @@ class FileOpBase(ABC):
         if inputs:
             input_list = inputs.split(INOUT_SEPARATOR)
             for file in input_list:
-                self.get_file_from_object_storage(file.strip())
+                # URL-decode the input file path to handle encoded characters
+                decoded_file = unquote(file.strip())
+                self.get_file_from_object_storage(decoded_file)
 
         subprocess.call(["tar", "-zxvf", archive_file])
         duration = time.time() - t0
@@ -154,7 +156,9 @@ class FileOpBase(ABC):
                 # URL-decode the output file path to handle wildcard characters
                 # that may have been encoded (e.g., * -> %2A)
                 decoded_file = unquote(file.strip())
-                self.process_output_file(decoded_file)
+                # Validate the path to prevent directory traversal attacks
+                validated_file = self.validate_path(decoded_file)
+                self.process_output_file(validated_file)
             duration = time.time() - t0
             OpUtil.log_operation_info("outputs processed", duration)
         else:
@@ -204,6 +208,44 @@ class FileOpBase(ABC):
     def has_wildcard(self, filename):
         wildcards = ["*", "?"]
         return bool(any(c in filename for c in wildcards))
+
+    def validate_path(self, path: str) -> str:
+        """Validate that a path does not escape the working directory.
+
+        :param path: The path to validate (may be relative or contain wildcards)
+        :return: The validated path
+        :raises ValueError: If the path attempts to escape the working directory
+        """
+        # Get the current working directory as the base
+        base_dir = os.getcwd()
+
+        # For paths with wildcards, validate the directory part
+        if self.has_wildcard(path):
+            # Extract the directory component before the wildcard
+            dir_part = os.path.dirname(path)
+            if dir_part:
+                # Resolve and validate the directory part
+                try:
+                    resolved_dir = os.path.realpath(os.path.join(base_dir, dir_part))
+                    if not resolved_dir.startswith(
+                        os.path.realpath(base_dir) + os.sep
+                    ) and resolved_dir != os.path.realpath(base_dir):
+                        raise ValueError(f"Path traversal detected: {path} resolves outside working directory")
+                except Exception:
+                    # If we can't resolve it (directory doesn't exist yet), just check for obvious traversal
+                    if ".." in dir_part:
+                        raise ValueError(f"Path traversal pattern detected: {path}")
+            # Return the original path with wildcards intact
+            return path
+        else:
+            # For non-wildcard paths, resolve and validate fully
+            resolved_path = os.path.realpath(os.path.join(base_dir, path))
+            if not resolved_path.startswith(os.path.realpath(base_dir) + os.sep) and resolved_path != os.path.realpath(
+                base_dir
+            ):
+                raise ValueError(f"Path traversal detected: {path} resolves outside working directory")
+            # Return the relative path to maintain compatibility
+            return path
 
     def process_output_file(self, output_file):
         """Puts the file to object storage.  Handles wildcards and directories."""
