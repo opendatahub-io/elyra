@@ -476,7 +476,7 @@ def test_validate_filepath(pvm, dummy_text_file: Path, dummy_binary_file: Path):
 def test_validate_filepath_with_directory(pvm, tmp_path):
     """
     Test function: PipelineValidationManager._validate_filepath
-    Scope: validate that directories are accepted as valid dependencies
+    Scope: validate that directories are only accepted when allow_directory=True
     """
     response = ValidationResponse()
 
@@ -489,7 +489,7 @@ def test_validate_filepath_with_directory(pvm, tmp_path):
     (test_dir / "file1.txt").write_text("test content 1")
     (test_dir / "file2.py").write_text("print('test')")
 
-    # Test scenario 1: directories are valid dependencies with binary_file_ok=True
+    # Test scenario 1: directories are REJECTED by default (allow_directory=False)
     pvm._validate_filepath(
         node_id=node["id"],
         file_dir=str(tmp_path),
@@ -500,10 +500,27 @@ def test_validate_filepath_with_directory(pvm, tmp_path):
         binary_file_ok=True,
     )
 
+    response_json = response.to_json()
+    assert response_json.get("issues"), "Directory should be rejected when allow_directory=False"
+    assert "invalidFilePath" in response_json["issues"][0]["type"]
+
+    # Test scenario 2: directories are ACCEPTED when allow_directory=True
+    response = ValidationResponse()
+    pvm._validate_filepath(
+        node_id=node["id"],
+        file_dir=str(tmp_path),
+        property_name=property_name,
+        node_label=node["app_data"]["label"],
+        filename=str(test_dir),
+        response=response,
+        binary_file_ok=True,
+        allow_directory=True,
+    )
+
     assert not response.has_fatal, response.to_json()
     assert not response.to_json().get("issues")
 
-    # Test scenario 2: directories are valid dependencies with binary_file_ok=False
+    # Test scenario 3: directories are accepted with allow_directory=True and binary_file_ok=False
     # The binary check should only apply to files, not directories
     response = ValidationResponse()
     pvm._validate_filepath(
@@ -514,6 +531,7 @@ def test_validate_filepath_with_directory(pvm, tmp_path):
         filename=str(test_dir),
         response=response,
         binary_file_ok=False,
+        allow_directory=True,
     )
 
     assert not response.has_fatal, response.to_json()

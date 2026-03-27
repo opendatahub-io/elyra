@@ -485,6 +485,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     filename=dependency,
                     response=response,
                     binary_file_ok=True,
+                    allow_directory=True,
                 )
 
     async def _validate_custom_component_node_properties(
@@ -730,6 +731,7 @@ class PipelineValidationManager(SingletonConfigurable):
         response: ValidationResponse,
         file_dir: Optional[str] = "",
         binary_file_ok: bool = True,
+        allow_directory: bool = False,
     ) -> None:
         """
         Checks the file structure, paths and existence of pipeline dependencies.
@@ -741,6 +743,7 @@ class PipelineValidationManager(SingletonConfigurable):
         :param response: ValidationResponse containing the issue list to be updated
         :param file_dir: the dir path of the where the pipeline file resides in the elyra workspace
         :param binary_file_ok: whether to reject binary files
+        :param allow_directory: whether to accept directories in addition to files
         """
         file_dir = file_dir or self.root_dir
 
@@ -777,7 +780,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     },
                 )
         elif not os.path.exists(normalized_path) or not (
-            os.path.isfile(normalized_path) or os.path.isdir(normalized_path)
+            os.path.isfile(normalized_path) or (allow_directory and os.path.isdir(normalized_path))
         ):
             response.add_message(
                 severity=ValidationSeverity.Error,
