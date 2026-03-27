@@ -33,6 +33,7 @@ class TestValidatePath:
     def test_kfp_validate_safe_relative_paths(self):
         """Test that safe relative paths pass validation"""
         mock_instance = Mock(spec=kfp_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: kfp_bootstrapper.FileOpBase.has_wildcard(mock_instance, filename)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
@@ -49,6 +50,7 @@ class TestValidatePath:
     def test_kfp_validate_safe_wildcard_paths(self):
         """Test that wildcard paths pass validation"""
         mock_instance = Mock(spec=kfp_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: kfp_bootstrapper.FileOpBase.has_wildcard(mock_instance, filename)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
@@ -66,6 +68,7 @@ class TestValidatePath:
     def test_kfp_validate_blocks_parent_traversal(self):
         """Test that parent directory traversal is blocked"""
         mock_instance = Mock(spec=kfp_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: kfp_bootstrapper.FileOpBase.has_wildcard(mock_instance, filename)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
@@ -82,6 +85,7 @@ class TestValidatePath:
     def test_kfp_validate_blocks_mixed_traversal(self):
         """Test that mixed path traversal is blocked"""
         mock_instance = Mock(spec=kfp_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: kfp_bootstrapper.FileOpBase.has_wildcard(mock_instance, filename)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
@@ -98,6 +102,9 @@ class TestValidatePath:
     def test_airflow_validate_safe_paths(self):
         """Test that Airflow validate_path works identically"""
         mock_instance = Mock(spec=airflow_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: airflow_bootstrapper.FileOpBase.has_wildcard(
+            mock_instance, filename
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
@@ -111,6 +118,9 @@ class TestValidatePath:
     def test_airflow_validate_blocks_traversal(self):
         """Test that Airflow validate_path blocks traversal"""
         mock_instance = Mock(spec=airflow_bootstrapper.FileOpBase)
+        mock_instance.has_wildcard = lambda filename: airflow_bootstrapper.FileOpBase.has_wildcard(
+            mock_instance, filename
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             original_cwd = os.getcwd()
