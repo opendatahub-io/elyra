@@ -8,5 +8,6 @@ pytest-console-scripts
 pytest_jupyter
 pytest-tornasync
 pytest_virtualenv
+mock
 requests-mock
 requests-unixsocket
