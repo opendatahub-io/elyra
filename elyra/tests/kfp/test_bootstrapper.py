@@ -850,3 +850,338 @@ def _fileChecksum(filename):
             buf = afile.read(65536)
     checksum = hasher.hexdigest()
     return checksum
+
+
+# =========================================================================
+# Tests for cos-output-append-run-id feature
+# =========================================================================
+
+
+def test_parse_arguments_with_cos_output_append_run_id():
+    """Test that --cos-output-append-run-id flag is parsed correctly"""
+    test_args = [
+        "-e",
+        "http://test.me.now",
+        "-d",
+        "test-directory",
+        "-t",
+        "test-archive.tgz",
+        "-f",
+        "test-notebook.ipynb",
+        "-b",
+        "test-bucket",
+        "-n",
+        "test-pipeline",
+        "--cos-output-append-run-id",
+    ]
+    args_dict = bootstrapper.OpUtil.parse_arguments(test_args)
+
+    assert args_dict["cos-output-append-run-id"] is True
+
+
+def test_parse_arguments_without_cos_output_append_run_id():
+    """Test that cos-output-append-run-id defaults to False when not specified"""
+    test_args = [
+        "-e",
+        "http://test.me.now",
+        "-d",
+        "test-directory",
+        "-t",
+        "test-archive.tgz",
+        "-f",
+        "test-notebook.ipynb",
+        "-b",
+        "test-bucket",
+        "-n",
+        "test-pipeline",
+    ]
+    args_dict = bootstrapper.OpUtil.parse_arguments(test_args)
+
+    assert args_dict.get("cos-output-append-run-id") is None or args_dict["cos-output-append-run-id"] is False
+
+
+def test_get_object_storage_filename_without_run_id(monkeypatch, s3_setup):
+    """Test get_object_storage_filename without run ID appending (backward compatible)"""
+    op = _get_operation_instance(monkeypatch, s3_setup)
+    op.input_params["cos-directory"] = "test-pipeline-123456"
+    op.append_run_id = False
+
+    filename = "output.csv"
+    result = op.get_object_storage_filename(filename, use_run_id=False)
+
+    assert result == "test-pipeline-123456/output.csv"
+
+
+def test_get_object_storage_filename_with_run_id_disabled(monkeypatch, s3_setup):
+    """Test get_object_storage_filename when flag is disabled (even with use_run_id=True)"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-abc-123")
+
+    op = _get_operation_instance(monkeypatch, s3_setup)
+    op.input_params["cos-directory"] = "test-pipeline-123456"
+    op.append_run_id = False  # Feature disabled
+
+    filename = "output.csv"
+    result = op.get_object_storage_filename(filename, use_run_id=True)
+
+    # Should NOT include run ID when feature is disabled
+    assert result == "test-pipeline-123456/output.csv"
+
+
+def test_get_object_storage_filename_with_run_id_enabled(monkeypatch, s3_setup):
+    """Test get_object_storage_filename with run ID appending enabled"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-abc-123")
+
+    op = _get_operation_instance(monkeypatch, s3_setup)
+    op.input_params["cos-directory"] = "test-pipeline-123456"
+    op.input_params["cos-output-append-run-id"] = True
+    op.append_run_id = True
+
+    filename = "output.csv"
+    result = op.get_object_storage_filename(filename, use_run_id=True)
+
+    # Should include run ID in the path
+    assert result == "test-pipeline-123456/run-abc-123/output.csv"
+
+
+def test_get_object_storage_filename_with_run_id_no_env_var(monkeypatch, s3_setup):
+    """Test get_object_storage_filename when ELYRA_RUN_NAME is not set"""
+    # Ensure ELYRA_RUN_NAME is not set
+    monkeypatch.delenv("ELYRA_RUN_NAME", raising=False)
+
+    op = _get_operation_instance(monkeypatch, s3_setup)
+    op.input_params["cos-directory"] = "test-pipeline-123456"
+    op.input_params["cos-output-append-run-id"] = True
+    op.append_run_id = True
+
+    filename = "output.csv"
+    result = op.get_object_storage_filename(filename, use_run_id=True)
+
+    # Should NOT include run ID when env var is missing
+    assert result == "test-pipeline-123456/output.csv"
+
+
+def test_put_file_to_object_storage_with_run_id(monkeypatch, s3_setup, tmpdir):
+    """Test that put_file_to_object_storage appends run ID to path when enabled"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-xyz-789")
+
+    bucket_name = "test-bucket"
+    file_to_put = "test-output.txt"
+
+    # Create a test file to upload
+    with tmpdir.as_cwd():
+        with open(file_to_put, "w") as f:
+            f.write("test content")
+
+        op = _get_operation_instance(monkeypatch, s3_setup)
+        op.input_params["cos-directory"] = "pipeline-123"
+        op.input_params["cos-output-append-run-id"] = True
+        op.append_run_id = True
+
+        # Upload with run ID (default behavior for outputs)
+        op.put_file_to_object_storage(file_to_upload=file_to_put, use_run_id=True)
+
+        # Verify file was uploaded to the run-specific path
+        expected_path = "pipeline-123/run-xyz-789/test-output.txt"
+        stat = s3_setup.stat_object(bucket_name=bucket_name, object_name=expected_path)
+        assert stat is not None
+
+
+def test_put_file_to_object_storage_without_run_id(monkeypatch, s3_setup, tmpdir):
+    """Test that put_file_to_object_storage doesn't append run ID when use_run_id=False"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-xyz-789")
+
+    bucket_name = "test-bucket"
+    file_to_put = "dependencies.tar.gz"
+
+    # Create a test file to upload
+    with tmpdir.as_cwd():
+        with open(file_to_put, "w") as f:
+            f.write("dependency archive")
+
+        op = _get_operation_instance(monkeypatch, s3_setup)
+        op.input_params["cos-directory"] = "pipeline-123"
+        op.input_params["cos-output-append-run-id"] = True
+        op.append_run_id = True
+
+        # Upload without run ID (for dependencies)
+        op.put_file_to_object_storage(file_to_upload=file_to_put, use_run_id=False)
+
+        # Verify file was uploaded to the shared path (no run ID)
+        expected_path = "pipeline-123/dependencies.tar.gz"
+        stat = s3_setup.stat_object(bucket_name=bucket_name, object_name=expected_path)
+        assert stat is not None
+
+
+def test_get_file_from_object_storage_with_run_id(monkeypatch, s3_setup, tmpdir):
+    """Test that get_file_from_object_storage retrieves from run-specific path"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-def-456")
+
+    bucket_name = "test-bucket"
+    file_name = "input-data.csv"
+    file_content = "test,data,content"
+
+    # Upload file to run-specific path first
+    with tmpdir.as_cwd():
+        with open(file_name, "w") as f:
+            f.write(file_content)
+
+        s3_setup.fput_object(
+            bucket_name=bucket_name,
+            object_name=f"pipeline-123/run-def-456/{file_name}",
+            file_path=file_name,
+        )
+
+        # Remove local file
+        os.remove(file_name)
+
+        # Now download with run ID
+        op = _get_operation_instance(monkeypatch, s3_setup)
+        op.input_params["cos-directory"] = "pipeline-123"
+        op.input_params["cos-output-append-run-id"] = True
+        op.append_run_id = True
+
+        op.get_file_from_object_storage(file_to_get=file_name, use_run_id=True)
+
+        # Verify file was downloaded
+        assert os.path.isfile(file_name)
+        with open(file_name, "r") as f:
+            assert f.read() == file_content
+
+
+def test_get_file_from_object_storage_without_run_id(monkeypatch, s3_setup, tmpdir):
+    """Test that get_file_from_object_storage retrieves from shared path when use_run_id=False"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-ghi-999")
+
+    bucket_name = "test-bucket"
+    file_name = "shared-dependencies.tar.gz"
+    file_content = "shared dependency archive"
+
+    # Upload file to shared path (no run ID)
+    with tmpdir.as_cwd():
+        with open(file_name, "w") as f:
+            f.write(file_content)
+
+        s3_setup.fput_object(
+            bucket_name=bucket_name,
+            object_name=f"pipeline-123/{file_name}",  # No run ID in path
+            file_path=file_name,
+        )
+
+        # Remove local file
+        os.remove(file_name)
+
+        # Now download without run ID
+        op = _get_operation_instance(monkeypatch, s3_setup)
+        op.input_params["cos-directory"] = "pipeline-123"
+        op.input_params["cos-output-append-run-id"] = True
+        op.append_run_id = True
+
+        op.get_file_from_object_storage(file_to_get=file_name, use_run_id=False)
+
+        # Verify file was downloaded from shared path
+        assert os.path.isfile(file_name)
+        with open(file_name, "r") as f:
+            assert f.read() == file_content
+
+
+def test_process_dependencies_uses_correct_paths(monkeypatch, s3_setup, tmpdir):
+    """Test that process_dependencies downloads archive without run ID but inputs with run ID"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-integration-test")
+
+    bucket_name = "test-bucket"
+    archive_name = "test-archive.tgz"
+    input_file = "upstream-output.txt"
+
+    # Upload archive to shared path
+    s3_setup.fput_object(
+        bucket_name=bucket_name,
+        object_name=f"pipeline-999/{archive_name}",  # No run ID
+        file_path=os.path.join(RESOURCES_DIR, archive_name),
+    )
+
+    # Upload input file to run-specific path
+    with tmpdir.as_cwd():
+        with open(input_file, "w") as f:
+            f.write("upstream data")
+
+        s3_setup.fput_object(
+            bucket_name=bucket_name,
+            object_name=f"pipeline-999/run-integration-test/{input_file}",  # With run ID
+            file_path=input_file,
+        )
+
+        os.remove(input_file)
+
+        # Configure operation
+        op = _get_operation_instance(monkeypatch, s3_setup)
+        op.input_params["cos-directory"] = "pipeline-999"
+        op.input_params["cos-dependencies-archive"] = archive_name
+        op.input_params["inputs"] = input_file
+        op.input_params["cos-output-append-run-id"] = True
+        op.append_run_id = True
+
+        # Process dependencies
+        op.process_dependencies()
+
+        # Verify both archive and input file were downloaded
+        assert os.path.isfile(archive_name)
+        assert os.path.isfile(input_file)
+        assert os.path.isfile("test-notebookA.ipynb")  # From archive
+
+
+def test_main_method_with_run_id_enabled(monkeypatch, s3_setup, tmpdir):
+    """Integration test: main method with cos-output-append-run-id enabled"""
+    monkeypatch.setenv("ELYRA_RUN_NAME", "run-full-test-123")
+
+    argument_dict = {
+        "cos-endpoint": "http://" + MINIO_HOST_PORT,
+        "cos-bucket": "test-bucket",
+        "cos-directory": "test-directory",
+        "cos-dependencies-archive": "test-archive.tgz",
+        "filepath": os.path.join(RESOURCES_DIR, "test-notebookA.ipynb"),
+        "inputs": "test-file.txt;test,file.txt",  # Both files needed by the notebook
+        "outputs": "test-file/test-file-copy.txt;test-file/test,file/test,file-copy.txt",
+        "user-volume-path": None,
+        "cos-output-append-run-id": True,  # Enable the feature
+    }
+
+    monkeypatch.setattr(bootstrapper.OpUtil, "parse_arguments", lambda x: argument_dict)
+    monkeypatch.setattr(bootstrapper.OpUtil, "package_install", mock.Mock(return_value=True))
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "minioadmin")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "minioadmin")
+
+    # Upload dependencies archive to shared path (no run ID)
+    s3_setup.fput_object(
+        bucket_name=argument_dict["cos-bucket"],
+        object_name="test-directory/test-archive.tgz",  # Shared path
+        file_path=os.path.join(RESOURCES_DIR, "test-archive.tgz"),
+    )
+
+    # Upload both input files to run-specific paths
+    s3_setup.fput_object(
+        bucket_name=argument_dict["cos-bucket"],
+        object_name="test-directory/run-full-test-123/test-file.txt",  # Run-specific path
+        file_path=os.path.join(RESOURCES_DIR, "test-requirements-elyra.txt"),
+    )
+    s3_setup.fput_object(
+        bucket_name=argument_dict["cos-bucket"],
+        object_name="test-directory/run-full-test-123/test,file.txt",  # Run-specific path
+        file_path=os.path.join(RESOURCES_DIR, "test-bad-requirements-elyra.txt"),
+    )
+
+    with tmpdir.as_cwd():
+        bootstrapper.main()
+
+        # Verify outputs were uploaded to run-specific paths
+        output_path1 = "test-directory/run-full-test-123/test-file/test-file-copy.txt"
+        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=output_path1)
+        assert stat is not None
+
+        output_path2 = "test-directory/run-full-test-123/test-file/test,file/test,file-copy.txt"
+        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=output_path2)
+        assert stat is not None
+
+        # Verify notebook outputs also uploaded to run-specific path
+        notebook_html_path = "test-directory/run-full-test-123/test-notebookA.html"
+        stat = s3_setup.stat_object(bucket_name=argument_dict["cos-bucket"], object_name=notebook_html_path)
+        assert stat is not None
