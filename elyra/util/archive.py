@@ -67,12 +67,22 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 return tarinfo
             # only include subdirectories if enabled in common properties
             elif recursive:
+                # If this directory matches a dependency name exactly, mark it as matched
+                for filename in filenames_set:
+                    if fnmatch.fnmatch(tarinfo.name, filename):
+                        matched_set.add(filename)
+                        break
                 return tarinfo
             # We have a directory, check if any filenames start with this value and
             # allow if found - except if a single '*' is listed (i.e., include_all) in
             # which case we don't want to add this directory since recursive is False.
             # This occurs with filenames like `data/util.py` or `data/*.py`.
             elif not include_all and directory_in_list(tarinfo.name, filenames_set):
+                # If this directory matches a dependency name exactly, mark it as matched
+                for filename in filenames_set:
+                    if fnmatch.fnmatch(tarinfo.name, filename):
+                        matched_set.add(filename)
+                        break
                 return tarinfo
             return None
 
@@ -92,6 +102,11 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 # if this is a direct match, record that its been processed
                 if not has_wildcards(filename) and not recursive:
                     processed_filenames.append(filename)
+                matched_set.add(filename)
+                return tarinfo
+
+            # If the dependency is a directory and this file is inside that directory, include it
+            if tarinfo.name.startswith(filename + os.sep):
                 matched_set.add(filename)
                 return tarinfo
 
