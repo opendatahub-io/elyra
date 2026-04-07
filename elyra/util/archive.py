@@ -34,9 +34,7 @@ def directory_in_list(directory, filenames):
     """Checks if any entries in the filenames list starts with the given directory."""
     # Normalize to '/' for tar archive comparisons (tarinfo.name always uses '/')
     return any(
-        name.replace(os.sep, '/').startswith(directory + '/')
-        or fnmatch.fnmatch(directory, name)
-        for name in filenames
+        name.replace(os.sep, "/").startswith(directory + "/") or fnmatch.fnmatch(directory, name) for name in filenames
     )
 
 
@@ -112,8 +110,8 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
 
             # If the dependency is a directory and this file is inside that directory, include it
             # Normalize filename to use '/' to match tar format (tarinfo.name always uses '/')
-            filename_normalized = filename.replace(os.sep, '/')
-            if tarinfo.name.startswith(filename_normalized + '/'):
+            filename_normalized = filename.replace(os.sep, "/")
+            if tarinfo.name.startswith(filename_normalized + "/"):
                 matched_set.add(filename)
                 return tarinfo
 
