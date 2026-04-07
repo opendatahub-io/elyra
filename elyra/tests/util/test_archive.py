@@ -243,6 +243,30 @@ class ArchiveTestCase(unittest.TestCase):
         self.assertArchivedFileCount(archive_path, 2)
         self.assertArchivedContent(archive_path, ["parent/child/config.json", "parent/child/data.csv"])
 
+    def test_archive_directory_dependency_require_complete(self):
+        """
+        Test that directory dependencies are properly marked as matched when require_complete=True
+        """
+        # Create a subdirectory with test files
+        data_dir = os.path.join(self.test_dir, "sample_data")
+        os.makedirs(data_dir)
+        self._create_test_files(data_dir)
+
+        test_archive_name = "dir-require-complete-" + self.test_timestamp + ".tar.gz"
+        # Should not raise FileNotFoundError - directory dependency should be marked as matched
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["a.py", "sample_data"],
+            require_complete=True,
+        )
+
+        # Verify archive contains the individual file + all files from directory
+        self.assertArchivedFileCount(archive_path, 6)
+        expected_files = ["a.py"]
+        expected_files.extend([f"sample_data/{f}" for f in self.test_files])
+        self.assertArchivedContent(archive_path, expected_files)
+
     def assertArchivedContent(self, archive_path, expected_content):
         actual_content = []
         with tarfile.open(archive_path, "r:gz") as tar:
