@@ -33,7 +33,11 @@ def create_project_temp_dir():
 def directory_in_list(directory, filenames):
     """Checks if any entries in the filenames list starts with the given directory."""
     # Normalize to '/' for tar archive comparisons (tarinfo.name always uses '/')
-    return any(name.replace(os.sep, '/').startswith(directory + '/') or fnmatch.fnmatch(directory, name) for name in filenames)
+    return any(
+        name.replace(os.sep, '/').startswith(directory + '/')
+        or fnmatch.fnmatch(directory, name)
+        for name in filenames
+    )
 
 
 def has_wildcards(filename):
