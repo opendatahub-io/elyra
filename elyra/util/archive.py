@@ -32,7 +32,8 @@ def create_project_temp_dir():
 
 def directory_in_list(directory, filenames):
     """Checks if any entries in the filenames list starts with the given directory."""
-    return any(name.startswith(directory + os.sep) or fnmatch.fnmatch(directory, name) for name in filenames)
+    # Normalize to '/' for tar archive comparisons (tarinfo.name always uses '/')
+    return any(name.replace(os.sep, '/').startswith(directory + '/') or fnmatch.fnmatch(directory, name) for name in filenames)
 
 
 def has_wildcards(filename):
@@ -106,7 +107,9 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 return tarinfo
 
             # If the dependency is a directory and this file is inside that directory, include it
-            if tarinfo.name.startswith(filename + os.sep):
+            # Normalize filename to use '/' to match tar format (tarinfo.name always uses '/')
+            filename_normalized = filename.replace(os.sep, '/')
+            if tarinfo.name.startswith(filename_normalized + '/'):
                 matched_set.add(filename)
                 return tarinfo
 
