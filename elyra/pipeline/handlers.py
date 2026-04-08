@@ -187,7 +187,8 @@ class PipelineSchedulerHandler(HttpErrorMixin, APIHandler):
             response = await PipelineProcessorManager.instance().process(pipeline)
             result = response.to_json()
             if validation_issues:
-                result["issues"] = validation_issues
+                existing_issues = result.get("issues", [])
+                result["issues"] = [*existing_issues, *validation_issues]
             json_msg = json.dumps(result)
             self.set_status(200)
         else:

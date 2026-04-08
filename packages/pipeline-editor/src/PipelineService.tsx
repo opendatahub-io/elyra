@@ -239,21 +239,21 @@ export class PipelineService {
               >
                 Run Details.
               </a>
-              {response['object_storage_path'] !== null ? (
-                <p>
-                  The results and outputs are in the{' '}
-                  {response['object_storage_path']} working directory in{' '}
-                  <a
-                    href={response['object_storage_url']}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    object storage
-                  </a>
-                  .
-                </p>
-              ) : null}
             </p>
+            {response['object_storage_path'] !== null ? (
+              <p>
+                The results and outputs are in the{' '}
+                {response['object_storage_path']} working directory in{' '}
+                <a
+                  href={response['object_storage_url']}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  object storage
+                </a>
+                .
+              </p>
+            ) : null}
             {PipelineService.renderValidationWarnings(issues)}
           </div>
         );
@@ -332,7 +332,14 @@ export class PipelineService {
   private static renderValidationWarnings(
     issues?: IValidationIssue[]
   ): React.ReactNode {
-    if (!issues || issues.length === 0) {
+    if (!Array.isArray(issues)) {
+      return null;
+    }
+    const warningIssues = issues.filter(
+      (issue) =>
+        issue && typeof issue.message === 'string' && issue.severity === 2
+    );
+    if (warningIssues.length === 0) {
       return null;
     }
     return (
@@ -348,8 +355,11 @@ export class PipelineService {
       >
         <p style={{ margin: '0 0 4px', fontWeight: 'bold' }}>Warnings:</p>
         <ul style={{ margin: 0, paddingLeft: '20px' }}>
-          {issues.map((issue, i) => {
-            const nodeName = issue.data?.nodeName;
+          {warningIssues.map((issue, i) => {
+            const nodeName =
+              issue.data && typeof issue.data === 'object'
+                ? (issue.data as Record<string, unknown>).nodeName
+                : undefined;
             return (
               <li key={i}>
                 {nodeName ? <strong>{String(nodeName)}: </strong> : null}
