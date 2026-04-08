@@ -810,11 +810,6 @@ class PipelineValidationManager(SingletonConfigurable):
     def _validate_label(self, node_id: str, node_label: str, response: ValidationResponse) -> None:
         """
         KFP specific check for the label name when constructing the node operation using dsl
-
-        Note: This validation is primarily for Kubeflow Pipelines (KFP) where labels must conform
-        to Kubernetes naming conventions (max 63 chars, lowercase alphanumeric with dashes/dots/underscores).
-        However, it is currently called for all runtimes.
-
         :param node_id: the unique ID of the node
         :param node_label: the given node name or user customized name/label of the node
         :param response: ValidationResponse containing the issue list to be updated
