@@ -123,6 +123,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
 
         if not response.has_fatal:
+            validation_issues = response.to_json().get("issues", [])
             pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
                 pipeline_definition
             )
@@ -130,7 +131,10 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
             pipeline_exported_path = await PipelineProcessorManager.instance().export(
                 pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
             )
-            json_msg = json.dumps({"export_path": pipeline_export_path})
+            result = {"export_path": pipeline_export_path}
+            if validation_issues:
+                result["issues"] = validation_issues
+            json_msg = json.dumps(result)
             self.set_status(201)
             self.set_header("Content-Type", "application/json")
             location = url_path_join(self.base_url, "api", "contents", pipeline_exported_path)
@@ -175,12 +179,16 @@ class PipelineSchedulerHandler(HttpErrorMixin, APIHandler):
         self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
 
         if not response.has_fatal:
+            validation_issues = response.to_json().get("issues", [])
             self.log.debug("Processing the pipeline submission and executing request")
             pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
                 pipeline_definition
             )
             response = await PipelineProcessorManager.instance().process(pipeline)
-            json_msg = json.dumps(response.to_json())
+            result = response.to_json()
+            if validation_issues:
+                result["issues"] = validation_issues
+            json_msg = json.dumps(result)
             self.set_status(200)
         else:
             json_msg = json.dumps(
