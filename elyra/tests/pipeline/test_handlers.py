@@ -361,13 +361,9 @@ async def test_pipeline_schedule_includes_validation_warnings(jp_fetch, monkeypa
         data={"nodeName": "MyNode"},
     )
 
-    monkeypatch.setattr(
-        PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response)
-    )
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
     monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
-    monkeypatch.setattr(
-        PipelineProcessorManager, "process", lambda x, y: _async_return(_MockProcessorResponse())
-    )
+    monkeypatch.setattr(PipelineProcessorManager, "process", lambda x, y: _async_return(_MockProcessorResponse()))
 
     json_body = json.dumps({"pipeline": "body"})
     http_response = await jp_fetch("elyra", "pipeline", "schedule", body=json_body, method="POST")
@@ -398,9 +394,7 @@ async def test_pipeline_schedule_merges_processor_and_validation_issues(jp_fetch
         message="Validation warning",
     )
 
-    monkeypatch.setattr(
-        PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response)
-    )
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
     monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
     monkeypatch.setattr(
         PipelineProcessorManager, "process", lambda x, y: _async_return(_MockProcessorResponseWithIssues())
@@ -426,9 +420,7 @@ async def test_pipeline_schedule_failure_returns_issues(jp_fetch, monkeypatch):
         severity=ValidationSeverity.Warning, message_type="nodeWarning", message="Also a warning", data={}
     )
 
-    monkeypatch.setattr(
-        PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response)
-    )
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
 
     json_body = json.dumps({"pipeline": "body"})
     with pytest.raises(HTTPClientError) as exc_info:
