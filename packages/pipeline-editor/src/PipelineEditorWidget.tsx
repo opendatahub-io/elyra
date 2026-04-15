@@ -989,9 +989,8 @@ const PipelineWrapper: React.FC<
       const exportName = dialogResult.value.export_name;
       const exportPath = `${basePath}${exportName}.${exportType}`;
 
-      const validationResponse = await PipelineService.validatePipeline(
-        pipelineJson
-      );
+      const validationResponse =
+        await PipelineService.validatePipeline(pipelineJson);
       if (validationResponse) {
         const fatalIssues = (validationResponse.issues ?? []).filter(
           (issue) => issue.severity === 1
@@ -1004,10 +1003,9 @@ const PipelineWrapper: React.FC<
           return;
         }
 
-        const shouldContinue =
-          await PipelineService.showWarningConfirmation(
-            validationResponse.issues ?? []
-          );
+        const shouldContinue = await PipelineService.showWarningConfirmation(
+          validationResponse.issues ?? []
+        );
         if (!shouldContinue) {
           return;
         }

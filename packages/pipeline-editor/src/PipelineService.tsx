@@ -400,10 +400,7 @@ export class PipelineService {
           <p style={{ marginTop: '10px' }}>Do you want to proceed?</p>
         </div>
       ),
-      buttons: [
-        Dialog.cancelButton(),
-        Dialog.okButton({ label: 'Continue' })
-      ]
+      buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'Continue' })]
     });
     return result.button.accept === true;
   }
