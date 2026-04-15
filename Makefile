@@ -160,13 +160,14 @@ package-ui-prod: build-dependencies yarn-install lint-ui build-ui-prod ## Packag
 package-ui-dev: build-dependencies dev-dependencies yarn-install dev-link lint-ui build-ui-dev ## Package UI for development
 
 build-server: # Build backend
+	rm -f dist/odh_elyra-*.whl dist/odh_elyra-*.tar.gz
 	$(PYTHON) -m build
 
 uninstall-server-package:
-	@$(PYTHON_PIP) uninstall elyra -y
+	@$(PYTHON_PIP) uninstall odh-elyra -y
 
 install-server-package: uninstall-server-package
-	$(PYTHON_PIP) install --upgrade --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "odh_elyra-*-py3-none-any.whl")"
+	$(PYTHON_PIP) install --force-reinstall --no-deps "$(shell find dist -name "odh_elyra-*-py3-none-any.whl")"
 
 install-server: build-dependencies lint-server build-server install-server-package ## Build and install backend
 

@@ -989,6 +989,30 @@ const PipelineWrapper: React.FC<
       const exportName = dialogResult.value.export_name;
       const exportPath = `${basePath}${exportName}.${exportType}`;
 
+      const validationResponse = await PipelineService.validatePipeline(
+        pipelineJson
+      );
+      if (validationResponse) {
+        const fatalIssues = (validationResponse.issues ?? []).filter(
+          (issue) => issue.severity === 1
+        );
+        if (fatalIssues.length > 0) {
+          const errorMessage = fatalIssues
+            .map((issue) => issue.message)
+            .join('\n');
+          toast.error(`Failed ${actionType}: ${errorMessage}`);
+          return;
+        }
+
+        const shouldContinue =
+          await PipelineService.showWarningConfirmation(
+            validationResponse.issues ?? []
+          );
+        if (!shouldContinue) {
+          return;
+        }
+      }
+
       switch (actionType) {
         case 'run':
           PipelineService.submitPipeline(

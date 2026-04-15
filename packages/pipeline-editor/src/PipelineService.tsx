@@ -68,6 +68,12 @@ export interface IPipelineScheduleResponse {
   issues?: IValidationIssue[];
 }
 
+export interface IValidationResponse {
+  title: string;
+  description: string;
+  issues: IValidationIssue[];
+}
+
 export interface IRuntimeSchema extends ISchemaResource {
   runtime_type: string;
 }
@@ -114,6 +120,18 @@ export class PipelineService {
       return [];
     }
     return res.runtime_types.sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * Validates a pipeline definition server-side without submitting or exporting.
+   */
+  static async validatePipeline(
+    pipeline: GenericObjectType
+  ): Promise<IValidationResponse | undefined> {
+    return RequestHandler.makePostRequest<IValidationResponse>(
+      'elyra/pipeline/validate',
+      JSON.stringify(pipeline)
+    );
   }
 
   /**
@@ -225,7 +243,6 @@ export class PipelineService {
       }
       let dialogTitle;
       let dialogBody;
-      const issues = response.issues;
       if (response['run_url']) {
         dialogTitle = 'Job submission to ' + runtimeName + ' succeeded';
         dialogBody = (
@@ -254,7 +271,6 @@ export class PipelineService {
                 .
               </p>
             ) : null}
-            {PipelineService.renderValidationWarnings(issues)}
           </div>
         );
       } else {
@@ -264,7 +280,6 @@ export class PipelineService {
             <p>
               Your job has been executed in-place in your local environment.
             </p>
-            {PipelineService.renderValidationWarnings(issues)}
           </div>
         );
       }
@@ -315,13 +330,11 @@ export class PipelineService {
       if (!response) {
         return;
       }
-      const issues = response.issues;
       await showDialog({
         title: 'Pipeline export succeeded',
         body: (
           <div>
             <p>Exported file: {response.export_path}</p>
-            {PipelineService.renderValidationWarnings(issues)}
           </div>
         ),
         buttons: [Dialog.okButton()]
@@ -370,6 +383,29 @@ export class PipelineService {
         </ul>
       </div>
     );
+  }
+
+  static async showWarningConfirmation(
+    issues: IValidationIssue[]
+  ): Promise<boolean> {
+    const warnings = PipelineService.renderValidationWarnings(issues);
+    if (!warnings) {
+      return true;
+    }
+    const result = await showDialog({
+      title: 'Pipeline validation warnings',
+      body: (
+        <div>
+          {warnings}
+          <p style={{ marginTop: '10px' }}>Do you want to proceed?</p>
+        </div>
+      ),
+      buttons: [
+        Dialog.cancelButton(),
+        Dialog.okButton({ label: 'Continue' })
+      ]
+    });
+    return result.button.accept === true;
   }
 
   static getNodeType(filepath: string): string {
