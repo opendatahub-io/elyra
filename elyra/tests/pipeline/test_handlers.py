@@ -302,6 +302,134 @@ async def test_pipeline_success(jp_fetch, monkeypatch):
     assert http_response.code == 201
 
 
+async def test_pipeline_export_includes_validation_warnings(jp_fetch, monkeypatch):
+    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+
+    validation_response = ValidationResponse()
+    validation_response.add_message(
+        severity=ValidationSeverity.Warning,
+        message_type="nodeWarning",
+        message="Node label changed",
+        data={"nodeName": "MyNode"},
+    )
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(validation_response))
+    monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
+    monkeypatch.setattr(PipelineProcessorManager, "export", lambda x, y, z, aa, bb: _async_return("test.py"))
+
+    json_body = json.dumps(request_body)
+    http_response = await jp_fetch("elyra", "pipeline", "export", body=json_body, method="POST")
+
+    assert http_response.code == 201
+    response_body = json.loads(http_response.body.decode())
+    assert "issues" in response_body
+    assert len(response_body["issues"]) == 1
+    assert response_body["issues"][0]["severity"] == ValidationSeverity.Warning.value
+    assert response_body["issues"][0]["message"] == "Node label changed"
+    assert response_body["export_path"] == "test.py"
+
+
+async def test_pipeline_export_no_issues_when_no_warnings(jp_fetch, monkeypatch):
+    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+
+    validation_response = ValidationResponse()
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(validation_response))
+    monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
+    monkeypatch.setattr(PipelineProcessorManager, "export", lambda x, y, z, aa, bb: _async_return("test.py"))
+
+    json_body = json.dumps(request_body)
+    http_response = await jp_fetch("elyra", "pipeline", "export", body=json_body, method="POST")
+
+    assert http_response.code == 201
+    response_body = json.loads(http_response.body.decode())
+    assert "issues" not in response_body
+
+
+async def test_pipeline_schedule_includes_validation_warnings(jp_fetch, monkeypatch):
+    from elyra.pipeline.processor import PipelineProcessorResponse
+
+    class _MockProcessorResponse(PipelineProcessorResponse):
+        _type = RuntimeProcessorType.LOCAL
+        _name = "local"
+
+    validation_response = ValidationResponse()
+    validation_response.add_message(
+        severity=ValidationSeverity.Warning,
+        message_type="nodeWarning",
+        message="Node label changed",
+        data={"nodeName": "MyNode"},
+    )
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
+    monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
+    monkeypatch.setattr(PipelineProcessorManager, "process", lambda x, y: _async_return(_MockProcessorResponse()))
+
+    json_body = json.dumps({"pipeline": "body"})
+    http_response = await jp_fetch("elyra", "pipeline", "schedule", body=json_body, method="POST")
+
+    assert http_response.code == 200
+    response_body = json.loads(http_response.body.decode())
+    assert "issues" in response_body
+    assert len(response_body["issues"]) == 1
+    assert response_body["issues"][0]["message"] == "Node label changed"
+
+
+async def test_pipeline_schedule_merges_processor_and_validation_issues(jp_fetch, monkeypatch):
+    from elyra.pipeline.processor import PipelineProcessorResponse
+
+    class _MockProcessorResponseWithIssues(PipelineProcessorResponse):
+        _type = RuntimeProcessorType.LOCAL
+        _name = "local"
+
+        def to_json(self):
+            result = super().to_json()
+            result["issues"] = [{"severity": 3, "message": "Processor info", "type": "info", "data": {}}]
+            return result
+
+    validation_response = ValidationResponse()
+    validation_response.add_message(
+        severity=ValidationSeverity.Warning,
+        message_type="nodeWarning",
+        message="Validation warning",
+    )
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
+    monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
+    monkeypatch.setattr(
+        PipelineProcessorManager, "process", lambda x, y: _async_return(_MockProcessorResponseWithIssues())
+    )
+
+    json_body = json.dumps({"pipeline": "body"})
+    http_response = await jp_fetch("elyra", "pipeline", "schedule", body=json_body, method="POST")
+
+    assert http_response.code == 200
+    response_body = json.loads(http_response.body.decode())
+    assert "issues" in response_body
+    assert len(response_body["issues"]) == 2
+    assert response_body["issues"][0]["message"] == "Processor info"
+    assert response_body["issues"][1]["message"] == "Validation warning"
+
+
+async def test_pipeline_schedule_failure_returns_issues(jp_fetch, monkeypatch):
+    validation_response = ValidationResponse()
+    validation_response.add_message(
+        severity=ValidationSeverity.Error, message_type="invalidJSON", message="Fatal error", data={}
+    )
+    validation_response.add_message(
+        severity=ValidationSeverity.Warning, message_type="nodeWarning", message="Also a warning", data={}
+    )
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, pipeline: _async_return(validation_response))
+
+    json_body = json.dumps({"pipeline": "body"})
+    with pytest.raises(HTTPClientError) as exc_info:
+        await jp_fetch("elyra", "pipeline", "schedule", body=json_body, method="POST")
+    response_body = json.loads(exc_info.value.response.body.decode())
+    assert "issues" in response_body
+    assert len(response_body["issues"]) == 2
+
+
 async def test_pipeline_failure(jp_fetch, monkeypatch):
     request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
 
@@ -316,6 +444,27 @@ async def test_pipeline_failure(jp_fetch, monkeypatch):
     # Will raise HTTP error so we need to catch with pytest
     with pytest.raises(HTTPClientError):
         await jp_fetch("elyra", "pipeline", "export", body=json_body, method="POST")
+
+
+async def test_pipeline_export_failure_returns_issues(jp_fetch, monkeypatch):
+    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+
+    validation_response = ValidationResponse()
+    validation_response.add_message(
+        severity=ValidationSeverity.Error, message_type="invalidJSON", message="Fatal error", data={}
+    )
+    validation_response.add_message(
+        severity=ValidationSeverity.Warning, message_type="nodeWarning", message="Also a warning", data={}
+    )
+
+    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(validation_response))
+
+    json_body = json.dumps(request_body)
+    with pytest.raises(HTTPClientError) as exc_info:
+        await jp_fetch("elyra", "pipeline", "export", body=json_body, method="POST")
+    response_body = json.loads(exc_info.value.response.body.decode())
+    assert "issues" in response_body
+    assert len(response_body["issues"]) == 2
 
 
 async def test_validation_handler(jp_fetch, monkeypatch):
