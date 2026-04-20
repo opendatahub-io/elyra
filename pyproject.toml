@@ -249,6 +249,7 @@ application-import-names = ["elyra", "test"]
 application-package-names = ["elyra", "test"]
 enable-extensions = "G"
 max-line-length = 120
+extend-ignore = ["D1", "D2", "D3", "D4"]
 # References:
 # https://flake8.readthedocs.io/en/latest/user/configuration.html
 # https://flake8.readthedocs.io/en/latest/user/error-codes.html
