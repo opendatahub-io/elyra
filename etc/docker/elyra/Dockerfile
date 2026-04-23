@@ -21,7 +21,7 @@ FROM jupyterhub/k8s-singleuser-sample:1.2.0
 
 ARG TAG="dev"
 ARG ELYRA_VERSION
-ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
+ARG ELYRA_PACKAGE=odh_elyra-"$ELYRA_VERSION"-py3-none-any.whl
 
 # - Include with KFP Tekton support ('kfp-tekton') and component examples ('kfp-examples')
 ARG ELYRA_EXTRAS=[kfp-tekton,kfp-examples,gitlab]

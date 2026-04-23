@@ -21,7 +21,7 @@ FROM public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter:v1.5.0
 
 ARG TAG="dev"
 ARG ELYRA_VERSION
-ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
+ARG ELYRA_PACKAGE=odh_elyra-"$ELYRA_VERSION"-py3-none-any.whl
 
 # - Include with KFP Tekton support ('kfp-tekton') and component examples ('kfp-examples')
 ARG ELYRA_EXTRAS=[kfp-tekton,kfp-examples,gitlab]
