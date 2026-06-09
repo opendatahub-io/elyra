@@ -16,7 +16,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "autopep8>=1.5.0",
-    "click==8.1.8",  # elyra-ai/elyra#2579 -- 8.2.0 dropped support for Python 3.9
+    "click>=8.4.0",  
     "colorama",
     "deprecation",
     "entrypoints>=0.3",
@@ -30,7 +30,7 @@ dependencies = [
     "jupyterlab~=4.5.0",  # comment out to use local jupyterlab
     "jupyterlab-lsp~=5.1.0",  # comment out to use local jupyterlab
     "jupyterlab-git~=0.51.2",  # Avoid breaking 1.x changes
-    "jupyter-resource-usage~=1.1.0",
+    "jupyter-resource-usage~=1.2.1",
     "MarkupSafe>=2.1",
     "minio>=7.0.0,!=7.2.1",
     "nbclient>=0.10.0",

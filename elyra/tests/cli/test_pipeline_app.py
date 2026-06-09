@@ -94,7 +94,7 @@ def test_no_opts():
     assert "export    Export a pipeline to a runtime-specific format" in result.output
     assert "validate  Validate pipeline" in result.output
 
-    assert result.exit_code == 0
+    assert result.exit_code == 2
 
 
 def test_bad_subcommand():
