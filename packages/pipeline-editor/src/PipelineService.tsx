@@ -54,10 +54,24 @@ export interface IPipelineResource extends IElyraResource {
   }>;
 }
 
+export interface IValidationIssue {
+  severity: number;
+  message: string;
+  type: string;
+  data: Record<string, unknown>;
+}
+
 export interface IPipelineScheduleResponse {
   run_url: string;
   object_storage_url: string;
   object_storage_path: string;
+  issues?: IValidationIssue[];
+}
+
+export interface IValidationResponse {
+  title: string;
+  description: string;
+  issues: IValidationIssue[];
 }
 
 export interface IRuntimeSchema extends ISchemaResource {
@@ -106,6 +120,18 @@ export class PipelineService {
       return [];
     }
     return res.runtime_types.sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * Validates a pipeline definition server-side without submitting or exporting.
+   */
+  static async validatePipeline(
+    pipeline: GenericObjectType
+  ): Promise<IValidationResponse | undefined> {
+    return RequestHandler.makePostRequest<IValidationResponse>(
+      'elyra/pipeline/validate',
+      JSON.stringify(pipeline)
+    );
   }
 
   /**
@@ -218,18 +244,19 @@ export class PipelineService {
       let dialogTitle;
       let dialogBody;
       if (response['run_url']) {
-        // pipeline executed remotely in a runtime of choice
         dialogTitle = 'Job submission to ' + runtimeName + ' succeeded';
         dialogBody = (
-          <p>
-            Check the status of your job at{' '}
-            <a
-              href={response['run_url']}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Run Details.
-            </a>
+          <div>
+            <p>
+              Check the status of your job at{' '}
+              <a
+                href={response['run_url']}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Run Details.
+              </a>
+            </p>
             {response['object_storage_path'] !== null ? (
               <p>
                 The results and outputs are in the{' '}
@@ -244,14 +271,16 @@ export class PipelineService {
                 .
               </p>
             ) : null}
-            <br />
-          </p>
+          </div>
         );
       } else {
-        // pipeline executed in-place locally
         dialogTitle = 'Job execution succeeded';
         dialogBody = (
-          <p>Your job has been executed in-place in your local environment.</p>
+          <div>
+            <p>
+              Your job has been executed in-place in your local environment.
+            </p>
+          </div>
         );
       }
 
@@ -291,7 +320,9 @@ export class PipelineService {
       overwrite: overwrite
     };
 
-    return RequestHandler.makePostRequest<IPipelineExportBody>(
+    return RequestHandler.makePostRequest<
+      IPipelineExportBody & { issues?: IValidationIssue[] }
+    >(
       'elyra/pipeline/export',
       JSON.stringify(body),
       this.getWaitDialog('Generating pipeline artifacts ...')
@@ -301,10 +332,77 @@ export class PipelineService {
       }
       await showDialog({
         title: 'Pipeline export succeeded',
-        body: <p>Exported file: {response.export_path} </p>,
+        body: (
+          <div>
+            <p>Exported file: {response.export_path}</p>
+          </div>
+        ),
         buttons: [Dialog.okButton()]
       });
     });
+  }
+
+  private static renderValidationWarnings(
+    issues?: IValidationIssue[]
+  ): React.ReactNode {
+    if (!Array.isArray(issues)) {
+      return null;
+    }
+    const warningIssues = issues.filter(
+      (issue) =>
+        issue && typeof issue.message === 'string' && issue.severity === 2
+    );
+    if (warningIssues.length === 0) {
+      return null;
+    }
+    return (
+      <div
+        style={{
+          marginTop: '10px',
+          padding: '8px 12px',
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffc107',
+          borderRadius: '4px',
+          color: '#664d03'
+        }}
+      >
+        <p style={{ margin: '0 0 4px', fontWeight: 'bold' }}>Warnings:</p>
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          {warningIssues.map((issue, i) => {
+            const nodeName =
+              issue.data && typeof issue.data === 'object'
+                ? (issue.data as Record<string, unknown>).nodeName
+                : undefined;
+            return (
+              <li key={i}>
+                {nodeName ? <strong>{String(nodeName)}: </strong> : null}
+                {issue.message}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
+  static async showWarningConfirmation(
+    issues: IValidationIssue[]
+  ): Promise<boolean> {
+    const warnings = PipelineService.renderValidationWarnings(issues);
+    if (!warnings) {
+      return true;
+    }
+    const result = await showDialog({
+      title: 'Pipeline validation warnings',
+      body: (
+        <div>
+          {warnings}
+          <p style={{ marginTop: '10px' }}>Do you want to proceed?</p>
+        </div>
+      ),
+      buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'Continue' })]
+    });
+    return result.button.accept === true;
   }
 
   static getNodeType(filepath: string): string {
