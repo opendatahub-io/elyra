@@ -1,6 +1,6 @@
 {
   "name": "@elyra/r-editor-extension",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "JupyterLab extension - Run R scripts using a kernel runtime",
   "keywords": [
     "jupyter",
@@ -53,8 +53,8 @@
     "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@elyra/script-editor": "5.0.1",
-    "@elyra/ui-components": "5.0.1",
+    "@elyra/script-editor": "5.0.2",
+    "@elyra/ui-components": "5.0.2",
     "@jupyterlab/application": "^4.4.2",
     "@jupyterlab/apputils": "^4.4.2",
     "@jupyterlab/codeeditor": "^4.4.2",
