@@ -13,6 +13,12 @@ The `odh-elyra` JupyterLab extension is developed in a separate repo (https://gi
 
 The notebooks build system is hermetic — it uses prefetched wheels from a `cachi2/output/deps/pip/` directory with no network access during the container build. To test local elyra changes on RHOAI, we build a custom wheel, swap it into the prefetch cache, build the notebook image, and push it to quay.io for import into RHOAI. This workflow injects an unreleased wheel into the container build.
 
+## Scope
+
+This skill builds a custom **workbench image** (`jupyter/datascience/`). It covers changes to the JupyterLab extension UI and the backend Python code that compiles and submits pipelines — everything that runs inside the user's browser/notebook session.
+
+It does **not** cover changes to `elyra/kfp/bootstrapper.py`. The bootstrapper runs inside **pipeline runtime images** (`runtimes/datascience/`), which are separate container images. The notebooks repo vendors a copy of the bootstrapper at `prefetch-input/elyra-v<VERSION>/elyra/kfp/bootstrapper.py` — that copy is baked into the runtime images independently of the workbench wheel. To test bootstrapper changes, you would need to also build a custom runtime image with the updated file.
+
 ## When to use
 
 - You have local elyra changes (your own branch, a coworker's PR branch, etc.) that you want to test on a deployed RHOAI or ODH instance
