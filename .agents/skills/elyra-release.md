@@ -75,6 +75,30 @@ You can also trigger this manually via `workflow_dispatch` with:
 
 The release workflow also runs daily at 4am UTC as a dry run (`release.yml` cron schedule). This catches build issues early without publishing anything. No action needed — just be aware it runs.
 
+## Post-release: update the vendored bootstrapper in the notebooks repo
+
+The `opendatahub-io/notebooks` repo vendors a copy of `elyra/kfp/bootstrapper.py` for use in **pipeline runtime images** — the containers that execute inside Kubeflow Pipeline steps. This copy is checked into the notebooks repo at `prefetch-input/elyra-v<VERSION>/elyra/kfp/bootstrapper.py` and is NOT updated automatically by the elyra release workflow. All seven runtime Dockerfiles (`runtimes/*/ubi9-python-3.12/Dockerfile.konflux.*`) COPY from this vendored path.
+
+After publishing a new elyra release, open a PR in the notebooks repo to update the bootstrapper:
+
+1. Replace `prefetch-input/elyra-v<OLD>/elyra/kfp/bootstrapper.py` with the file from the new tag:
+   ```bash
+   curl -o prefetch-input/elyra-v<OLD>/elyra/kfp/bootstrapper.py \
+     https://raw.githubusercontent.com/opendatahub-io/elyra/refs/tags/v<NEW>/elyra/kfp/bootstrapper.py
+   ```
+2. Rename the directory to match the new version:
+   ```bash
+   git mv prefetch-input/elyra-v<OLD> prefetch-input/elyra-v<NEW>
+   ```
+3. Update the README inside that directory to reflect the new version and upstream source URL.
+4. Update all runtime Dockerfiles that reference the old path. Find them with:
+   ```bash
+   grep -rl "elyra-v<OLD>" runtimes/
+   ```
+   Change `prefetch-input/elyra-v<OLD>/elyra/kfp/bootstrapper.py` to `prefetch-input/elyra-v<NEW>/elyra/kfp/bootstrapper.py` in each.
+
+If this step is skipped, pipeline runtime images will continue running the old bootstrapper even after the workbench images pick up the new elyra wheel via PyPI.
+
 ## Known gaps
 
 - How the git tag is created (manual vs automated)
