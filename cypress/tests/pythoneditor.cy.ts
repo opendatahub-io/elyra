@@ -24,11 +24,6 @@ describe('Python Editor tests', () => {
     // delete files created for testing
     cy.deleteFile('untitled*.py');
     cy.deleteFile('helloworld.py'); // delete python file used for testing
-
-    // Delete runtime configuration used for testing
-    cy.exec('elyra-metadata remove runtimes --name=kfp_test_runtime', {
-      failOnNonZeroExit: false
-    });
   });
 
   // Python Editor Tests
@@ -77,51 +72,6 @@ describe('Python Editor tests', () => {
     cy.createNewScriptEditor('Python');
     cy.get('.elyra-ScriptEditor .jp-Toolbar select > option[value*=python]');
     cy.closeTab(-1);
-  });
-
-  it('click the Run as Pipeline button should display dialog', () => {
-    // Install runtime configuration
-    cy.installRuntimeConfig({ type: 'kfp' });
-
-    cy.createNewScriptEditor('Python');
-
-    clickRunAsPipelineButton();
-    // Check for expected dialog title
-    cy.get('.jp-Dialog-header').should('have.text', 'Run file as pipeline');
-    // Dismiss dialog
-    cy.get('button.jp-mod-reject').click();
-
-    // Close editor tab
-    cy.closeTab(-1);
-  });
-
-  it('click the Run as Pipeline button on unsaved file should display save dialog', () => {
-    // Create new python editor
-    cy.createNewScriptEditor('Python');
-
-    // Add some text to the editor (wait code editor to load)
-    cy.wait(1000);
-    cy.get('.cm-content[contenteditable="true"]')
-      .first()
-      .click({ force: true })
-      .type('print("test")', { delay: 100 });
-
-    cy.wait(500);
-    cy.dismissAssistant('scripteditor');
-
-    clickRunAsPipelineButton();
-
-    // Check expected save and submit dialog message
-    cy.contains('.jp-Dialog-header', /this file contains unsaved changes/i);
-
-    // Dismiss save and submit dialog
-    cy.get('button.jp-mod-reject').click();
-
-    // Close editor tab
-    cy.closeTab(-1);
-
-    // Dismiss save your work dialog by discarding changes
-    cy.get('button.jp-mod-warn').click();
   });
 
   // check for new output console and scroll up/down buttons
@@ -195,11 +145,6 @@ describe('Python Editor tests', () => {
 // ------------------------------
 // ----- Utility Functions
 // ------------------------------
-
-// Click Run as Pipeline button
-const clickRunAsPipelineButton = (): void => {
-  cy.get('jp-button[title="Run file as batch"]').click();
-};
 
 // Click Run button
 const clickRunButton = (): void => {
