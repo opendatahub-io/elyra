@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Poll PyPI until the odh-elyra package at a given version is published."""
+
 import argparse
 import sys
 import time

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Update vendored bootstrapper.py in the notebooks repo after an elyra release."""
+
 import argparse
 import subprocess
 import sys
@@ -43,8 +44,7 @@ def main():
 
     new_dir = prefetch / new_name
     subprocess.run(
-        ["git", "-C", str(repo), "mv",
-         str(old_dir.relative_to(repo)), str(new_dir.relative_to(repo))],
+        ["git", "-C", str(repo), "mv", str(old_dir.relative_to(repo)), str(new_dir.relative_to(repo))],
         check=True,
     )
     print(f"  Renamed {old_name} -> {new_name}")

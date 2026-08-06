@@ -22,7 +22,6 @@ It does **not** cover changes to `elyra/kfp/bootstrapper.py`. The bootstrapper r
 ## When to use
 
 - You have local elyra changes (your own branch, a coworker's PR branch, etc.) that you want to test on a deployed RHOAI or ODH instance
-- The changes may be on a branch that is behind elyra main or a release tag — that's fine, we rebase first
 
 ## Repos involved
 
@@ -39,19 +38,13 @@ It does **not** cover changes to `elyra/kfp/bootstrapper.py`. The bootstrapper r
 source .venv/bin/activate
 
 # checkout the branch with the local changes you want to test
-# if the branch is behind main or the latest release, rebase it:
-git fetch upstream --tags
-git rebase <LATEST_RELEASE_TAG>  # e.g. v5.0.2 — check `git tag --sort=-v:refname | head` for the latest
-```
-
-After rebasing, verify `elyra/_version.py` has the version matching the release tag you rebased onto. If it still shows a dev version (e.g. `5.0.0.dev0`), update it to match the release (e.g. `5.0.2`).
-
-```bash
 # build the wheel (includes frontend JS + backend)
 pip install -r build_requirements.txt
 make release
 # output: dist/odh_elyra-<VERSION>-py3-none-any.whl
 ```
+
+Note the version in the wheel filename (e.g. `5.0.0.dev0`) — you'll need it in step 2 to update `requirements.cpu.txt`.
 
 `make release` requires Node.js and Yarn for the frontend build. If only backend changes are being tested and the frontend assets are already built, `python -m build` alone may suffice, but `make release` is the safe default.
 
@@ -113,5 +106,4 @@ podman push quay.io/<YOUR_NAMESPACE>/<YOUR_TEST_TAG>
 ## Troubleshooting
 
 - **Build fails with "No solution found" for a missing package:** The prefetch cache is incomplete. Run `prefetch-all.sh` again (step 2). After it completes, re-copy your custom elyra wheel and re-delete the old one before rebuilding.
-- **Wheel version mismatch:** Make sure the version in `requirements.cpu.txt` exactly matches the version string in your wheel filename (e.g. `odh_elyra-5.0.2-py3-none-any.whl` → `odh-elyra==5.0.2`).
-- **Rebase conflicts:** If rebasing the elyra branch onto a release tag produces conflicts, resolve them manually. If too many commits were already cherry-picked into the release, git will skip them automatically — this is expected and safe.
+- **Wheel version mismatch:** Make sure the version in `requirements.cpu.txt` exactly matches the version string in your wheel filename (e.g. `odh_elyra-5.0.0.dev0-py3-none-any.whl` → `odh-elyra==5.0.0.dev0`).

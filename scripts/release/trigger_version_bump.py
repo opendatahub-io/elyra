@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Trigger the update-version-through-pr workflow to create a version bump PR."""
+
 import argparse
 import subprocess
 
@@ -12,10 +13,16 @@ def main():
     args = p.parse_args()
 
     cmd = [
-        "gh", "workflow", "run", "update-version-through-pr.yml",
-        "-f", f"version={args.version}",
-        "-f", f"source_branch={args.source_branch}",
-        "-f", f"target_branch={args.target_branch}",
+        "gh",
+        "workflow",
+        "run",
+        "update-version-through-pr.yml",
+        "-f",
+        f"version={args.version}",
+        "-f",
+        f"source_branch={args.source_branch}",
+        "-f",
+        f"target_branch={args.target_branch}",
     ]
     print(f"Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Create a GitHub release, which creates the v* tag and triggers PyPI publish."""
+
 import argparse
 import subprocess
 
@@ -12,10 +13,15 @@ def main():
 
     tag = f"v{args.version}"
     cmd = [
-        "gh", "release", "create", tag,
-        "--target", args.target_branch,
+        "gh",
+        "release",
+        "create",
+        tag,
+        "--target",
+        args.target_branch,
         "--generate-notes",
-        "--title", tag,
+        "--title",
+        tag,
     ]
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, check=True, capture_output=True, text=True)
