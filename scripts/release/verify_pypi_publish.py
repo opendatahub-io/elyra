@@ -22,14 +22,14 @@ def main():
     print(f"Polling {url} (timeout {args.timeout}s)")
 
     while time.time() < deadline:
+        remaining = deadline - time.time()
         try:
-            urllib.request.urlopen(url)
+            urllib.request.urlopen(url, timeout=min(POLL_INTERVAL, remaining))
             print(f"{PACKAGE} {args.version} is on PyPI")
             return
         except urllib.error.HTTPError:
-            remaining = int(deadline - time.time())
-            print(f"  Not yet available, {remaining}s remaining...")
-            time.sleep(POLL_INTERVAL)
+            print(f"  Not yet available, {int(remaining)}s remaining...")
+            time.sleep(min(POLL_INTERVAL, remaining))
 
     print(f"TIMEOUT: {PACKAGE} {args.version} not found after {args.timeout}s", file=sys.stderr)
     sys.exit(1)

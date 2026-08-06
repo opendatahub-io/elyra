@@ -64,8 +64,8 @@ RELEASE_PYTHON_VERSION=3.12 BUILD_ARCH=linux/amd64 \
 
 After the prefetch completes:
 
-1. **Copy your custom wheel** from `elyra/dist/odh_elyra-<VERSION>-py3-none-any.whl` into `notebooks/cachi2/output/deps/pip/`
-2. **Delete the old wheel** — remove the existing `odh_elyra-*-py3-none-any.whl` that the prefetch downloaded, so there's no ambiguity about which version gets installed
+1. **Delete the old wheel** — remove the existing `odh_elyra-*-py3-none-any.whl` that the prefetch downloaded, so there's no ambiguity about which version gets installed
+2. **Copy your custom wheel** from `elyra/dist/odh_elyra-<VERSION>-py3-none-any.whl` into `notebooks/cachi2/output/deps/pip/`
 3. **Update `requirements.cpu.txt`** — change the `odh-elyra==<OLD_VERSION>` line to match your wheel's version in `jupyter/datascience/ubi9-python-3.12/requirements.cpu.txt`. No hash updates are needed — the Dockerfile uses `--no-verify-hashes`
 
 **Note:** These instructions default to the datascience image (`jupyter/datascience/ubi9-python-3.12`). Tell the user you are updating the datascience image's requirements file. If they need to test on a different image (pytorch, tensorflow, trustyai, rocm), the corresponding `requirements.*.txt` file for that image must be updated instead. To find all files that pin elyra:
@@ -105,5 +105,5 @@ podman push quay.io/<YOUR_NAMESPACE>/<YOUR_TEST_TAG>
 
 ## Troubleshooting
 
-- **Build fails with "No solution found" for a missing package:** The prefetch cache is incomplete. Run `prefetch-all.sh` again (step 2). After it completes, re-copy your custom elyra wheel and re-delete the old one before rebuilding.
+- **Build fails with "No solution found" for a missing package:** The prefetch cache is incomplete. Run `prefetch-all.sh` again (step 2). After it completes, re-delete the old elyra wheel and re-copy your custom one before rebuilding.
 - **Wheel version mismatch:** Make sure the version in `requirements.cpu.txt` exactly matches the version string in your wheel filename (e.g. `odh_elyra-5.0.0.dev0-py3-none-any.whl` → `odh-elyra==5.0.0.dev0`).

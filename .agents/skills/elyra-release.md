@@ -90,17 +90,9 @@ After running it, review the changes in the notebooks repo, commit them, and ope
 
 If this step is skipped, pipeline runtime images will continue running the old bootstrapper even after the workbench images pick up the new elyra wheel via PyPI.
 
-### 9. (Optional) Bump to next dev version
-
-```bash
-python scripts/release/trigger_version_bump.py <NEXT_DEV_VERSION> --source-branch <RELEASE_BRANCH> --target-branch main
-```
-
-For example, after releasing `5.0.3`, bump to `5.1.0.dev0`. This opens a PR against `main`. Review and merge it.
-
 ## Daily CI dry run
 
-The release workflow also runs daily at 4am UTC as a dry run (`release.yml` cron schedule). This catches build issues early without publishing anything. No action needed — just be aware it runs.
+The release workflow also runs daily at 4am UTC as a dry run (`release.yml` cron schedule).
 
 ## Container images
 
