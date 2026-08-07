@@ -90,15 +90,18 @@ The Makefile auto-detects `cachi2/output/` and mounts it into the build. The out
 # retag with a descriptive name for your test
 podman tag <IMAGE_TAG_FROM_BUILD_OUTPUT> quay.io/<YOUR_NAMESPACE>/<YOUR_TEST_TAG>
 # e.g. quay.io/myuser/workbench-images:datascience-elyra-test
+```
 
-podman login quay.io
+Before pushing, the user must be logged in to quay.io. `podman login` requires interactive input and cannot be run by the agent. Ask the user to run `podman login quay.io` in their own terminal, then proceed with the push:
+
+```bash
 podman push quay.io/<YOUR_NAMESPACE>/<YOUR_TEST_TAG>
 ```
 
 ### 5. Import and test on RHOAI
 # This part should be done manually by the user to mimic customer usage, it should not be done by the model
 
-1. Go to **Settings > Notebook images > Import new image**
+1. Go to **Settings > Environment setup > Workbench images > Import new image**
 2. Add `quay.io/<YOUR_NAMESPACE>/<YOUR_TEST_TAG>`
 3. Create a workbench using that image
 4. Test the elyra changes in the workbench
