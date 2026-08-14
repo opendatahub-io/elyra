@@ -35,7 +35,6 @@ from urllib.parse import urlunparse
 
 from packaging import version
 
-
 # Inputs and Outputs separator character.  If updated,
 # same-named variable in _notebook_op.py must be updated!
 INOUT_SEPARATOR = ";"
