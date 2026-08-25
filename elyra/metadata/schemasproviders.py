@@ -81,7 +81,7 @@ class RuntimesSchemas(ElyraSchemasProvider):
                 elif schema["name"] == "airflow":
                     airflow_schema_present = True
             else:
-                self.log.error(
+                self.log.warning(
                     f"No entrypoint with name '{schema['name']}' was found in group "
                     f"'elyra.pipeline.processor' to match the schema with the same name. Skipping..."
                 )
