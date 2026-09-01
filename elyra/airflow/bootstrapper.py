@@ -105,6 +105,7 @@ class FileOpBase(ABC):
 
         # get minio client
         self.cos_client = minio.Minio(self.cos_endpoint.netloc, secure=self.secure, credentials=cred_provider)
+        self.append_run_id = self.input_params.get("cos-output-append-run-id")
 
     @abstractmethod
     def execute(self) -> None:
@@ -124,13 +125,15 @@ class FileOpBase(ABC):
         t0 = time.time()
         archive_file = self.input_params.get("cos-dependencies-archive")
 
-        self.get_file_from_object_storage(archive_file)
+        # Dependencies archive is shared across runs, don't use run ID
+        self.get_file_from_object_storage(archive_file, use_run_id=False)
 
         inputs = self.input_params.get("inputs")
         if inputs:
             input_list = inputs.split(INOUT_SEPARATOR)
             for file in input_list:
-                self.get_file_from_object_storage(file.strip())
+                # Input files should be per-run to avoid cross-run conflicts
+                self.get_file_from_object_storage(file.strip(), use_run_id=True)
 
         subprocess.call(["tar", "-zxvf", archive_file])
         duration = time.time() - t0
@@ -156,21 +159,28 @@ class FileOpBase(ABC):
         else:
             OpUtil.log_operation_info("No outputs found in this operation")
 
-    def get_object_storage_filename(self, filename: str) -> str:
+    def get_object_storage_filename(self, filename: str, use_run_id: bool = False) -> str:
         """Function to pre-pend cloud storage working dir to file name
 
         :param filename: the local file
+        :param use_run_id: whether to prepend run ID to the path
         :return: the full path of the object storage file
         """
+        # If enabled and run ID is available, prepend it to create unique path per run
+        if use_run_id and self.append_run_id:
+            run_id = os.getenv("ELYRA_RUN_NAME")
+            if run_id:
+                filename = os.path.join(run_id, filename)
         return os.path.join(self.input_params.get("cos-directory", ""), filename)
 
-    def get_file_from_object_storage(self, file_to_get: str) -> None:
+    def get_file_from_object_storage(self, file_to_get: str, use_run_id: bool = False) -> None:
         """Utility function to get files from an object storage
 
         :param file_to_get: filename
+        :param use_run_id: whether to use run ID in the path (for input files, not dependencies)
         """
 
-        object_to_get = self.get_object_storage_filename(file_to_get)
+        object_to_get = self.get_object_storage_filename(file_to_get, use_run_id=use_run_id)
         t0 = time.time()
         self.cos_client.fget_object(bucket_name=self.cos_bucket, object_name=object_to_get, file_path=file_to_get)
         duration = time.time() - t0
@@ -178,18 +188,21 @@ class FileOpBase(ABC):
             f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}", duration
         )
 
-    def put_file_to_object_storage(self, file_to_upload: str, object_name: Optional[str] = None) -> None:
+    def put_file_to_object_storage(
+        self, file_to_upload: str, object_name: Optional[str] = None, use_run_id: bool = True
+    ) -> None:
         """Utility function to put files into an object storage
 
         :param file_to_upload: filename
         :param object_name: remote filename (used to rename)
+        :param use_run_id: whether to use run ID in the path (default True for outputs)
         """
 
         object_to_upload = object_name
         if not object_to_upload:
             object_to_upload = file_to_upload
 
-        object_to_upload = self.get_object_storage_filename(object_to_upload)
+        object_to_upload = self.get_object_storage_filename(object_to_upload, use_run_id=use_run_id)
         t0 = time.time()
         self.cos_client.fput_object(bucket_name=self.cos_bucket, object_name=object_to_upload, file_path=file_to_upload)
         duration = time.time() - t0
@@ -551,6 +564,13 @@ class OpUtil(object):
         parser.add_argument("-f", "--file", dest="filepath", help="File to execute", required=True)
         parser.add_argument("-o", "--outputs", dest="outputs", help="Files to output to object store", required=False)
         parser.add_argument("-i", "--inputs", dest="inputs", help="Files to pull in from parent node", required=False)
+        parser.add_argument(
+            "--cos-output-append-run-id",
+            dest="cos-output-append-run-id",
+            action="store_true",
+            help="Append run ID to input/output paths to avoid overwrites across runs",
+            required=False,
+        )
         parsed_args = vars(parser.parse_args(args))
 
         # set pipeline name as global
