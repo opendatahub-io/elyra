@@ -18,7 +18,7 @@ from kfp.dsl import PipelineTask
 from kfp.kubernetes import common
 from kfp.kubernetes import kubernetes_executor_config_pb2 as pb
 
-from kfp.kubernetes import add_toleration, add_pod_label, add_pod_annotation
+from kfp.kubernetes import add_toleration, add_pod_label, add_pod_annotation, empty_dir_mount
 
 {# Load statements for custom components                            -#}
 {# component_hash = """<TEXT>"""                                  -#}
@@ -112,6 +112,15 @@ def generated_pipeline(
 {%    for volume_path, volume_dict in workflow_task.task_modifiers.kubernetes_volumes.items() %}
     volume.mount_pvc({{ task_name }}, "{{ volume_dict.pvc_name }}", "{{ volume_path }}")
 {%    endfor %}
+{%  endif %}
+{%  if workflow_task.task_modifiers.kubernetes_shared_mem_size %}
+    empty_dir_mount(
+        {{ task_name }},
+        volume_name="shm",
+        mount_path="/dev/shm",
+        medium="Memory",
+        size_limit="{{ workflow_task.task_modifiers.kubernetes_shared_mem_size.size }}{{ workflow_task.task_modifiers.kubernetes_shared_mem_size.units }}",
+    )
 {%  endif %}
 {%  if workflow_task.task_modifiers.kubernetes_tolerations %}
 {% for toleration_dict in workflow_task.task_modifiers.kubernetes_tolerations.values() %}

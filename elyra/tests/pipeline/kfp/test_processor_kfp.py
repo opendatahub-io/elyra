@@ -1218,6 +1218,43 @@ def enable_and_disable_crio(request):
     ],
     indirect=True,
 )
+def test_shared_memory_size_is_exported_in_kfp_v2_dsl(
+    monkeypatch, processor: KfpPipelineProcessor, metadata_dependencies: Dict[str, Any]
+):
+    """Shared Memory Size must be rendered as a KFP v2 emptyDir mount."""
+    pipeline = metadata_dependencies["pipeline_object"]
+    runtime_config = metadata_dependencies["runtime_config"]
+    workflow_engine = WorkflowEngineType.get_instance_by_value(runtime_config.metadata["engine"])
+    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(processor, "_verify_cos_connectivity", lambda x: True)
+    generated_dsl = processor._generate_pipeline_dsl(
+        pipeline=pipeline,
+        pipeline_name=pipeline.name,
+        workflow_engine=workflow_engine,
+        pipeline_version=f"{pipeline.name}-0815",
+        pipeline_instance_id=f"{pipeline.name}-{datetime.now().strftime('%m%d%H%M%S')}",
+        experiment_name=f"{pipeline.name}-0815",
+    )
+    assert "empty_dir_mount(" in generated_dsl
+    assert 'volume_name="shm"' in generated_dsl
+    assert 'mount_path="/dev/shm"' in generated_dsl
+    assert 'medium="Memory"' in generated_dsl
+    assert 'size_limit="0.5G"' in generated_dsl
+@pytest.mark.parametrize(
+    "metadata_dependencies",
+    [
+        {
+            "pipeline_file": Path(__file__).parent
+            / ".."
+            / "resources"
+            / "test_pipelines"
+            / "kfp"
+            / "kfp-one-node-generic-elyra-properties.pipeline",
+            "workflow_engine": WorkflowEngineType.ARGO,
+        },
+    ],
+    indirect=True,
+)
 @pytest.mark.skip(reason="This test is not compatible with KFP v2 as the generated YAML is ignoring \
             attributes from the source pipeline file")
 def test_generate_pipeline_dsl_compile_pipeline_dsl_optional_elyra_properties(
