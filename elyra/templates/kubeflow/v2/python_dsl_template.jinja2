@@ -4,7 +4,7 @@
 import kfp
 from kubernetes.client import *
 from kubernetes.client.models import *
-from kfp.kubernetes import secret, volume
+from kfp.kubernetes import secret, volume, empty_dir_mount
 
 from typing import Optional
 
@@ -135,6 +135,15 @@ def generated_pipeline(
         {% endif %}
     )
 {% endfor %}
+{%  endif %}
+{%  if workflow_task.task_modifiers.kubernetes_shared_mem_size %}
+    empty_dir_mount(
+        {{ task_name }},
+        volume_name="shm",
+        mount_path="/dev/shm",
+        medium="Memory",
+        size_limit="{{ workflow_task.task_modifiers.kubernetes_shared_mem_size.size }}{{ workflow_task.task_modifiers.kubernetes_shared_mem_size.units }}",
+    )
 {%  endif %}
 {#  declare upstream dependencies -#}
 {%  if workflow_task.upstream_workflow_task_ids %}
