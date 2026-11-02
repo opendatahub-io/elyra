@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import hashlib
+import http.client
 import json
 import logging
 import os
@@ -53,32 +54,120 @@ RESOURCES_DIR = os.path.join(ELYRA_ROOT_DIR, "elyra", "tests", "kfp", "resources
 
 @pytest.fixture(scope="module", autouse=True)
 def start_minio():
-    """Start the minio container to simulate COS."""
+    """Start an S3-compatible server for tests, or reuse an already-running instance.
 
-    # The docker run command will fail if an instance of the test_minio container is running.
-    # We'll make a "silent" attempt to start.  If that fails, assume its due to the container
-    # conflict, force its shutdown, and try once more.  If successful, yield the minio instance
-    # but also shutdown on the flip-side of the yield (when the fixture is cleaned up).
-    #
-    # Although actions like SIGINT (ctrl-C) should still trigger the post-yield logic, urgent
-    # interrupts like SIGQUIT (ctrl-\) or multiple SIGINTs can still orphan the container, so
-    # we still need the pre-yield behavior.
+    Tries three strategies in order:
+    1. A real MinIO instance already running on the port (e.g. started by the user
+       or a CI service container) — detected via the MinIO health endpoint.
+    2. A Docker-based MinIO container — used in local dev when Docker is available.
+    3. A ``moto.server`` subprocess — the always-available pure-Python S3 mock, used
+       automatically as a fallback (e.g. in CI environments where Docker Hub auth is
+       not available for fork PRs).
+    """
+    host, port_str = MINIO_HOST_PORT.split(":")
+    port = int(port_str)
 
-    minio = start_minio_container(False)
-    if minio is None:  # Got a failure. Shutdown (assumed) container and try once more.
+    def _minio_health_ok() -> bool:
+        """Return True when the real MinIO health endpoint responds with HTTP 200."""
+        try:
+            conn = http.client.HTTPConnection(host, port, timeout=2)
+            conn.request("GET", "/minio/health/live")
+            return conn.getresponse().status == 200
+        except Exception:
+            return False
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    def _s3_server_up() -> bool:
+        """Return True when any HTTP server responds on the S3 port (health or 4xx)."""
+        try:
+            conn = http.client.HTTPConnection(host, port, timeout=2)
+            conn.request("GET", "/")
+            conn.getresponse()  # any response means the server is up
+            return True
+        except Exception:
+            return False
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    if _minio_health_ok():
+        # Real MinIO is already running — nothing to do.
+        yield None
+        return
+
+    # --- Strategy 2: Docker MinIO ---
+    minio_proc: Optional[CompletedProcess] = start_minio_container(False)
+    if minio_proc is not None:
+        deadline = time.monotonic() + 30
+        try:
+            while time.monotonic() < deadline:
+                if _minio_health_ok():
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError(f"MinIO container did not become healthy at {MINIO_HOST_PORT} within 30 s")
+            yield minio_proc
+        finally:
+            stop_minio_container()
+        return
+
+    # Docker failed — clean up any partial state and fall through to moto.
+    try:
         stop_minio_container()
-        minio = start_minio_container(True)
+    except Exception:
+        pass
 
-    time.sleep(3)  # give container a chance to start
-    yield minio
-    stop_minio_container()
+    # --- Strategy 3: moto S3 server ---
+    moto_proc = _start_moto_server(port)
+    deadline = time.monotonic() + 30
+    try:
+        while time.monotonic() < deadline:
+            if _s3_server_up():
+                break
+            time.sleep(0.5)
+        else:
+            moto_proc.terminate()
+            raise RuntimeError(f"moto S3 server did not become ready at {MINIO_HOST_PORT} within 30 s")
+        yield moto_proc
+    finally:
+        moto_proc.terminate()
+        try:
+            moto_proc.wait(timeout=5)
+        except Exception:
+            moto_proc.kill()
+
+
+def _start_moto_server(port: int) -> subprocess.Popen:
+    """Start a moto S3 server subprocess and return it."""
+    return subprocess.Popen(
+        [sys.executable, "-m", "moto.server", "-p", str(port)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def start_minio_container(raise_on_failure: bool = False) -> Optional[CompletedProcess]:
     minio = None
     try:
         minio = run(
-            ["docker", "run", "--name", "test_minio", "-d", "-p", "9000:9000", "minio/minio", "server", "/data"],
+            [
+                "docker",
+                "run",
+                "--name",
+                "test_minio",
+                "-d",
+                "-p",
+                "9000:9000",
+                "minio/minio",
+                "server",
+                "/data",
+            ],
             check=True,
         )
     except CalledProcessError as ex:

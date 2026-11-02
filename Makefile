@@ -37,14 +37,11 @@ PYTHON?=python3
 PYTHON_PIP=$(PYTHON) -m pip
 PYTHON_VERSION?=3.13
 
-CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate
-
 ELYRA_VERSION:=$$(grep __version__ elyra/_version.py | cut -d"\"" -f2)
 TAG:=dev
 IMAGE_IS_LATEST=False
 ELYRA_IMAGE=elyra/elyra:$(TAG)
 ELYRA_IMAGE_LATEST=elyra/elyra:latest
-ELYRA_IMAGE_ENV?=elyra-image-env
 KF_NOTEBOOK_IMAGE=elyra/kf-notebook:$(TAG)
 KF_NOTEBOOK_IMAGE_LATEST=elyra/kf-notebook:latest
 
@@ -199,14 +196,12 @@ watch: ## Watch packages. For use alongside jupyter lab --watch
 release: yarn-install build-ui-prod build-server ## Build wheel file for release
 
 
-elyra-image-env: ## Creates a conda env consisting of the dependencies used in images
-	@conda env list | grep -q "$(ELYRA_IMAGE_ENV)" && \
-		conda env remove -y -n $(ELYRA_IMAGE_ENV) || \
-		echo "Environment $(ELYRA_IMAGE_ENV) does not exist, skipping removal"
-	conda create -y -n "$(ELYRA_IMAGE_ENV)" "python=$(PYTHON_VERSION)" pip --channel conda-forge
-	$(CONDA_ACTIVATE) $(ELYRA_IMAGE_ENV) && \
-	$(PYTHON_PIP) install -r etc/generic/requirements-elyra.txt && \
-	conda deactivate;
+elyra-image-env: ## Creates a venv and validates the dependencies used in images can be installed
+	rm -rf /tmp/elyra-image-env
+	$(PYTHON) -m venv /tmp/elyra-image-env
+	/tmp/elyra-image-env/bin/pip install --upgrade pip
+	/tmp/elyra-image-env/bin/pip install -r etc/generic/requirements-elyra.txt
+	rm -rf /tmp/elyra-image-env
 
 ## Test targets
 

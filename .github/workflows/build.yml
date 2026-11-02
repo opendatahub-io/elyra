@@ -178,6 +178,15 @@ jobs:
         run: |
           make install-server
           make install-examples
+      - name: Start S3 server (moto)
+        run: |
+          pip install -q "moto[server]>=5.0.0"
+          python -m moto.server -p 9000 &
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:9000/; then echo "S3 server ready"; break; fi
+            if [ "$i" -eq 30 ]; then echo "S3 server failed to start"; exit 1; fi
+            echo "Waiting for S3 server ($i/30)..."; sleep 1
+          done
       - name: Cypress
         run: make test-integration
       - name: Upload coverage reports to Codecov
@@ -216,6 +225,10 @@ jobs:
         python-version: ['3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Validate image environment
         run: make PYTHON_VERSION=${{ matrix.python-version }} elyra-image-env
 
