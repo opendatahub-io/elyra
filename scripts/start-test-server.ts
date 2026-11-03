@@ -30,18 +30,11 @@ const jupyterLog = fs.createWriteStream(path.join(logDir, 'jupyter.log'));
 jupyter.stderr?.pipe(jupyterLog);
 const dockerLog = fs.createWriteStream(path.join(logDir, 'docker.log'));
 
-/**
- * Check if an S3-compatible server is already reachable on port 9000.
- * Accepts real MinIO (200 health), moto server (any HTTP response), or any
- * other S3-compatible service.  Returns a Promise that resolves to true when
- * the server responds to an HTTP request (any status code), false otherwise.
- */
 const isMinioRunning = (): Promise<boolean> =>
   new Promise((resolve) => {
     const req = http.get(
       `http://127.0.0.1:${MINIO_PORT}/minio/health/live`,
       (res) => {
-        // Accept any HTTP response: 200 from real MinIO, 404 from moto server, etc.
         resolve(res.statusCode !== undefined);
         res.resume();
       }
@@ -53,8 +46,6 @@ const isMinioRunning = (): Promise<boolean> =>
     req.on('error', () => resolve(false));
   });
 
-// Track whether this process started the MinIO container so teardown only
-// kills containers that we own (not a container started by CI or the user).
 let minioStartedByUs = false;
 
 const handleTeardown = (): void => {
@@ -67,8 +58,6 @@ const handleTeardown = (): void => {
 process.on('SIGINT', handleTeardown);
 process.on('SIGTERM', handleTeardown);
 
-// Only start a Docker container when MinIO is not already available (e.g. in
-// local development).  In CI the minio container is started before this script.
 isMinioRunning().then((already) => {
   if (already) {
     dockerLog.write('MinIO already running on port 9000; skipping Docker.\n');
