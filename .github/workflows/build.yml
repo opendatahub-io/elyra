@@ -180,7 +180,7 @@ jobs:
           make install-examples
       - name: Start S3 server (moto)
         run: |
-          pip install -q "moto[server]>=5.0.0"
+          pip install -q -r test_requirements.txt
           python -m moto.server -p 9000 &
           for i in $(seq 1 30); do
             if curl -s -o /dev/null http://127.0.0.1:9000/; then echo "S3 server ready"; break; fi

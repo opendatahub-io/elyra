@@ -30,15 +30,12 @@ const jupyterLog = fs.createWriteStream(path.join(logDir, 'jupyter.log'));
 jupyter.stderr?.pipe(jupyterLog);
 const dockerLog = fs.createWriteStream(path.join(logDir, 'docker.log'));
 
-const isMinioRunning = (): Promise<boolean> =>
+const isS3ServerRunning = (): Promise<boolean> =>
   new Promise((resolve) => {
-    const req = http.get(
-      `http://127.0.0.1:${MINIO_PORT}/minio/health/live`,
-      (res) => {
-        resolve(res.statusCode !== undefined);
-        res.resume();
-      }
-    );
+    const req = http.get(`http://127.0.0.1:${MINIO_PORT}/`, (res) => {
+      resolve(res.statusCode !== undefined);
+      res.resume();
+    });
     req.setTimeout(2000, () => {
       req.destroy();
       resolve(false);
@@ -58,9 +55,11 @@ const handleTeardown = (): void => {
 process.on('SIGINT', handleTeardown);
 process.on('SIGTERM', handleTeardown);
 
-isMinioRunning().then((already) => {
+isS3ServerRunning().then((already) => {
   if (already) {
-    dockerLog.write('MinIO already running on port 9000; skipping Docker.\n');
+    dockerLog.write(
+      'S3-compatible server already running on port 9000; skipping Docker.\n'
+    );
     return;
   }
 

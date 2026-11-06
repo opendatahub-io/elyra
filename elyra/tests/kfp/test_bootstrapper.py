@@ -89,7 +89,11 @@ def start_minio():
         yield None
         return
 
-    minio_proc: Optional[CompletedProcess] = start_minio_container(False)
+    try:
+        minio_proc: Optional[CompletedProcess] = start_minio_container(False)
+    except OSError:
+        minio_proc = None
+
     if minio_proc is not None:
         deadline = time.monotonic() + 30
         try:
@@ -113,6 +117,10 @@ def start_minio():
     deadline = time.monotonic() + 30
     try:
         while time.monotonic() < deadline:
+            if moto_proc.poll() is not None:
+                raise RuntimeError(
+                    f"moto S3 server exited with code {moto_proc.returncode}; is {MINIO_HOST_PORT} already in use?"
+                )
             if _s3_server_up():
                 break
             time.sleep(0.5)
@@ -162,7 +170,10 @@ def start_minio_container(raise_on_failure: bool = False) -> Optional[CompletedP
 
 
 def stop_minio_container():
-    run(["docker", "rm", "-f", "test_minio"], check=True)
+    try:
+        run(["docker", "rm", "-f", "test_minio"], check=True)
+    except OSError:
+        pass
 
 
 @pytest.fixture(scope="function")
