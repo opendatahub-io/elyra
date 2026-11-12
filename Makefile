@@ -197,10 +197,22 @@ release: yarn-install build-ui-prod build-server ## Build wheel file for release
 
 
 elyra-image-env: ## Creates a venv and validates the dependencies used in images can be installed
-	rm -rf /tmp/elyra-image-env
-	$(PYTHON) -m venv /tmp/elyra-image-env
-	/tmp/elyra-image-env/bin/pip install --upgrade pip
-	/tmp/elyra-image-env/bin/pip install -r etc/generic/requirements-elyra.txt
+	@set -e; \
+	if command -v python$(PYTHON_VERSION) >/dev/null 2>&1; then \
+		PY=python$(PYTHON_VERSION); \
+	else \
+		PY="$(PYTHON)"; \
+	fi; \
+	actual=$$($$PY -c 'import sys; print("%d.%d" % sys.version_info[:2])'); \
+	if [ "$$actual" != "$(PYTHON_VERSION)" ]; then \
+		echo "ERROR: $$PY is Python $$actual, but PYTHON_VERSION=$(PYTHON_VERSION) was requested." >&2; \
+		echo "Install Python $(PYTHON_VERSION) or set PYTHON to a matching interpreter." >&2; \
+		exit 1; \
+	fi; \
+	rm -rf /tmp/elyra-image-env; \
+	$$PY -m venv /tmp/elyra-image-env; \
+	/tmp/elyra-image-env/bin/pip install --upgrade pip; \
+	/tmp/elyra-image-env/bin/pip install -r etc/generic/requirements-elyra.txt; \
 	rm -rf /tmp/elyra-image-env
 
 ## Test targets

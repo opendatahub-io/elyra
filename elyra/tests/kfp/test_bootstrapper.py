@@ -59,6 +59,7 @@ def start_minio():
     port = int(port_str)
 
     def _minio_health_ok() -> bool:
+        conn = None
         try:
             conn = http.client.HTTPConnection(host, port, timeout=2)
             conn.request("GET", "/minio/health/live")
@@ -66,12 +67,14 @@ def start_minio():
         except Exception:
             return False
         finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
+            if conn is not None:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
     def _s3_server_up() -> bool:
+        conn = None
         try:
             conn = http.client.HTTPConnection(host, port, timeout=2)
             conn.request("GET", "/")
@@ -80,10 +83,11 @@ def start_minio():
         except Exception:
             return False
         finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
+            if conn is not None:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
     if _minio_health_ok():
         yield None
@@ -105,7 +109,10 @@ def start_minio():
                 raise RuntimeError(f"MinIO container did not become healthy at {MINIO_HOST_PORT} within 30 s")
             yield minio_proc
         finally:
-            stop_minio_container()
+            try:
+                stop_minio_container()
+            except Exception:
+                pass
         return
 
     try:
