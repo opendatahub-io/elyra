@@ -101,20 +101,34 @@ class CosClient(LoggingConfigurable):
             if not self.client.bucket_exists(bucket_name=self.bucket):
                 self.client.make_bucket(bucket_name=self.bucket)
         except S3Error as ex:
-            # unpack the S3Error based off error codes
-            # https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-            if ex.code == "BucketAlreadyOwnedByYou":
-                self.log.warning("Object Storage bucket already owned by you", exc_info=True)
-            elif ex.code == "BucketAlreadyExists":
-                self.log.warning("Object Storage bucket already exists", exc_info=True)
-            elif ex.code == "SignatureDoesNotMatch":
-                self.log.error("Incorrect Object Storage password supplied")
-            elif ex.code == "InvalidAccessKeyId":
-                self.log.error("Incorrect Object Storage username supplied")
+            # AccessDenied during bucket_exists() typically indicates the caller
+            # lacks the s3:GetBucketLocation permission, which is common on
+            # S3-compatible storage (e.g. Scality) with minimal IAM policies.
+            # If the bucket did not exist the error would be NoSuchBucket,
+            # so it is safe to assume the bucket exists and proceed.
+            if ex.code == "AccessDenied":
+                self.log.warning(
+                    "AccessDenied when verifying Object Storage bucket '%s'. "
+                    "Assuming the bucket exists. Ensure the bucket is "
+                    "pre-created if the s3:GetBucketLocation permission "
+                    "is not granted.",
+                    self.bucket,
+                )
             else:
-                self.log.error(f"Object Storage error: {ex.code}", exc_info=True)
+                # unpack the S3Error based off error codes
+                # https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
+                if ex.code == "BucketAlreadyOwnedByYou":
+                    self.log.warning("Object Storage bucket already owned by you", exc_info=True)
+                elif ex.code == "BucketAlreadyExists":
+                    self.log.warning("Object Storage bucket already exists", exc_info=True)
+                elif ex.code == "SignatureDoesNotMatch":
+                    self.log.error("Incorrect Object Storage password supplied")
+                elif ex.code == "InvalidAccessKeyId":
+                    self.log.error("Incorrect Object Storage username supplied")
+                else:
+                    self.log.error(f"Object Storage error: {ex.code}", exc_info=True)
 
-            raise ex from ex
+                raise ex from ex
 
         except ValueError as ex:
             # providers.IamAwsProvider raises this if something bad happened
