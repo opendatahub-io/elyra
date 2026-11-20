@@ -115,8 +115,6 @@ export const commandIDs = {
   openDocManager: 'docmanager:open',
   newDocManager: 'docmanager:new-untitled',
   saveDocManager: 'docmanager:save',
-  submitScript: 'script-editor:submit',
-  submitNotebook: 'notebook:submit',
   addFileToPipeline: 'pipeline-editor:add-node',
   refreshPalette: 'pipeline-editor:refresh-palette',
   openViewer: 'code-viewer:open'
@@ -988,6 +986,28 @@ const PipelineWrapper: React.FC<
       const exportType = dialogResult.value.pipeline_filetype;
       const exportName = dialogResult.value.export_name;
       const exportPath = `${basePath}${exportName}.${exportType}`;
+
+      const validationResponse =
+        await PipelineService.validatePipeline(pipelineJson);
+      if (validationResponse) {
+        const fatalIssues = (validationResponse.issues ?? []).filter(
+          (issue) => issue.severity === 1
+        );
+        if (fatalIssues.length > 0) {
+          const errorMessage = fatalIssues
+            .map((issue) => issue.message)
+            .join('\n');
+          toast.error(`Failed ${actionType}: ${errorMessage}`);
+          return;
+        }
+
+        const shouldContinue = await PipelineService.showWarningConfirmation(
+          validationResponse.issues ?? []
+        );
+        if (!shouldContinue) {
+          return;
+        }
+      }
 
       switch (actionType) {
         case 'run':

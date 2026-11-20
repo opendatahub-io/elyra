@@ -258,9 +258,6 @@ Cypress.Commands.add('checkScriptEditorToolbarContent', (): void => {
 
   // check select kernel dropdown exists
   cy.get('.elyra-ScriptEditor .jp-Toolbar select');
-
-  // check Run as Pipeline button exists
-  cy.contains('Run as Pipeline');
 });
 
 Cypress.Commands.add('checkRightClickTabContent', (fileType: string): void => {

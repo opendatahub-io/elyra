@@ -8,5 +8,7 @@ pytest-console-scripts
 pytest_jupyter
 pytest-tornasync
 pytest_virtualenv
+mock
 requests-mock
 requests-unixsocket
+moto[server]==5.1.22

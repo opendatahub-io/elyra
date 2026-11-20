@@ -37,14 +37,11 @@ PYTHON?=python3
 PYTHON_PIP=$(PYTHON) -m pip
 PYTHON_VERSION?=3.13
 
-CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate
-
 ELYRA_VERSION:=$$(grep __version__ elyra/_version.py | cut -d"\"" -f2)
 TAG:=dev
 IMAGE_IS_LATEST=False
 ELYRA_IMAGE=elyra/elyra:$(TAG)
 ELYRA_IMAGE_LATEST=elyra/elyra:latest
-ELYRA_IMAGE_ENV?=elyra-image-env
 KF_NOTEBOOK_IMAGE=elyra/kf-notebook:$(TAG)
 KF_NOTEBOOK_IMAGE_LATEST=elyra/kf-notebook:latest
 
@@ -160,13 +157,14 @@ package-ui-prod: build-dependencies yarn-install lint-ui build-ui-prod ## Packag
 package-ui-dev: build-dependencies dev-dependencies yarn-install dev-link lint-ui build-ui-dev ## Package UI for development
 
 build-server: # Build backend
+	rm -f dist/odh_elyra-*.whl dist/odh_elyra-*.tar.gz
 	$(PYTHON) -m build
 
 uninstall-server-package:
-	@$(PYTHON_PIP) uninstall elyra -y
+	@$(PYTHON_PIP) uninstall odh-elyra -y
 
 install-server-package: uninstall-server-package
-	$(PYTHON_PIP) install --upgrade --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "odh_elyra-*-py3-none-any.whl")"
+	$(PYTHON_PIP) install --force-reinstall "$(shell find dist -name "odh_elyra-*-py3-none-any.whl")"
 
 install-server: build-dependencies lint-server build-server install-server-package ## Build and install backend
 
@@ -198,14 +196,24 @@ watch: ## Watch packages. For use alongside jupyter lab --watch
 release: yarn-install build-ui-prod build-server ## Build wheel file for release
 
 
-elyra-image-env: ## Creates a conda env consisting of the dependencies used in images
-	@conda env list | grep -q "$(ELYRA_IMAGE_ENV)" && \
-		conda env remove -y -n $(ELYRA_IMAGE_ENV) || \
-		echo "Environment $(ELYRA_IMAGE_ENV) does not exist, skipping removal"
-	conda create -y -n $(ELYRA_IMAGE_ENV) python=$(PYTHON_VERSION) --channel conda-forge
-	$(CONDA_ACTIVATE) $(ELYRA_IMAGE_ENV) && \
-	$(PYTHON_PIP) install -r etc/generic/requirements-elyra.txt && \
-	conda deactivate;
+elyra-image-env: ## Creates a venv and validates the dependencies used in images can be installed
+	@set -e; \
+	if command -v python$(PYTHON_VERSION) >/dev/null 2>&1; then \
+		PY=python$(PYTHON_VERSION); \
+	else \
+		PY="$(PYTHON)"; \
+	fi; \
+	actual=$$("$$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])'); \
+	if [ "$$actual" != "$(PYTHON_VERSION)" ]; then \
+		echo "ERROR: $$PY is Python $$actual, but PYTHON_VERSION=$(PYTHON_VERSION) was requested." >&2; \
+		echo "Install Python $(PYTHON_VERSION) or set PYTHON to a matching interpreter." >&2; \
+		exit 1; \
+	fi; \
+	rm -rf /tmp/elyra-image-env; \
+	"$$PY" -m venv /tmp/elyra-image-env; \
+	/tmp/elyra-image-env/bin/pip install --upgrade pip; \
+	/tmp/elyra-image-env/bin/pip install -r etc/generic/requirements-elyra.txt; \
+	rm -rf /tmp/elyra-image-env
 
 ## Test targets
 
@@ -260,7 +268,7 @@ elyra-image: # Build Elyra stand-alone container image
 	cp etc/docker/elyra/start-elyra.sh build/docker/start-elyra.sh
 	cp etc/docker/elyra/requirements.txt build/docker/requirements.txt
 	@mkdir -p build/docker/elyra
-	cp dist/elyra-$(ELYRA_VERSION)-py3-none-any.whl build/docker/
+	cp dist/odh_elyra-$(ELYRA_VERSION)-py3-none-any.whl build/docker/
 	$(CONTAINER_EXEC) buildx build \
         --progress=plain \
         $(CONTAINER_OUTPUT_OPTION) \
@@ -285,7 +293,7 @@ publish-elyra-image: elyra-image # Publish Elyra stand-alone container image
 kf-notebook-image: # Build elyra image for use with Kubeflow Notebook Server
 	@mkdir -p build/docker-kubeflow
 	cp etc/docker/kubeflow/* build/docker-kubeflow/
-	cp dist/elyra-$(ELYRA_VERSION)-py3-none-any.whl build/docker-kubeflow/
+	cp dist/odh_elyra-$(ELYRA_VERSION)-py3-none-any.whl build/docker-kubeflow/
 	$(CONTAINER_EXEC) buildx build \
         --progress=plain \
         $(CONTAINER_OUTPUT_OPTION) \
