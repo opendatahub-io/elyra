@@ -31,10 +31,12 @@ def create_project_temp_dir():
 
 
 def directory_in_list(directory, filenames):
-    """Checks if any entries in the filenames list starts with the given directory."""
-    # Normalize to '/' for tar archive comparisons (tarinfo.name always uses '/')
+    """Checks if any entries in the filenames list start with the given directory."""
     return any(
-        name.replace(os.sep, "/").startswith(directory + "/") or fnmatch.fnmatch(directory, name) for name in filenames
+        name.startswith(directory + "/")      # File dependency inside this directory
+        or directory.startswith(name + "/")   # This directory inside a dependency directory
+        or fnmatch.fnmatch(directory, name)   # Pattern match
+        for name in filenames
     )
 
 
@@ -109,9 +111,7 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 return tarinfo
 
             # If the dependency is a directory and this file is inside that directory, include it
-            # Normalize filename to use '/' to match tar format (tarinfo.name always uses '/')
-            filename_normalized = filename.replace(os.sep, "/")
-            if tarinfo.name.startswith(filename_normalized + "/"):
+            if tarinfo.name.startswith(filename + "/"):
                 matched_set.add(filename)
                 return tarinfo
 
@@ -124,8 +124,12 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                     return tarinfo
         return None
 
-    # Since filenames is essentially static, convert to set immediately and use the set
-    filenames_set = set(filenames or [])
+    # Since filenames is essentially static, convert to set immediately and normalize paths
+    filenames_set = set()
+    for filename in (filenames or []):
+        # Normalize to tar format: use '/', strip leading './', strip trailing '/'
+        normalized = filename.replace(os.sep, "/").lstrip("./").rstrip("/")
+        filenames_set.add(normalized)
 
     # If there's a '*' - less things to check.
     include_all = len({WILDCARDS[0]} & filenames_set) > 0

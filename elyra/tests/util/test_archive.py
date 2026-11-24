@@ -243,6 +243,70 @@ class ArchiveTestCase(unittest.TestCase):
         self.assertArchivedFileCount(archive_path, 2)
         self.assertArchivedContent(archive_path, ["parent/child/config.json", "parent/child/data.csv"])
 
+    def test_archive_parent_with_deep_descendants(self):
+        """
+        Test that selecting a parent directory includes deeply nested descendants.
+        Regression test for: selecting 'data' should include 'data/nested/deep.txt'
+        """
+        # Create nested directory structure: data/nested/deep.txt
+        parent_dir = os.path.join(self.test_dir, "data")
+        nested_dir = os.path.join(parent_dir, "nested")
+        os.makedirs(nested_dir)
+
+        # Add files at multiple levels
+        parent_file = os.path.join(parent_dir, "top.txt")
+        nested_file = os.path.join(nested_dir, "deep.txt")
+        with open(parent_file, "w") as f:
+            f.write("parent level")
+        with open(nested_file, "w") as f:
+            f.write("nested level")
+
+        test_archive_name = "parent-deep-descendants-" + self.test_timestamp + ".tar.gz"
+        # Select the parent directory - should include all descendants
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["data"], require_complete=True
+        )
+
+        # Should include both parent-level and deeply nested files
+        self.assertArchivedFileCount(archive_path, 2)
+        self.assertArchivedContent(archive_path, ["data/top.txt", "data/nested/deep.txt"])
+
+    def test_archive_directory_spelling_variations(self):
+        """
+        Test that different directory path spellings all work correctly.
+        Regression test for: 'data/', './data', and 'data' should all match the same directory
+        """
+        # Create a test directory with files
+        data_dir = os.path.join(self.test_dir, "data")
+        os.makedirs(data_dir)
+        test_file = os.path.join(data_dir, "file.txt")
+        with open(test_file, "w") as f:
+            f.write("test content")
+
+        # Test with trailing slash
+        test_archive_name = "dir-trailing-slash-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["data/"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
+        # Test with leading ./
+        test_archive_name = "dir-leading-dot-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["./data"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
+        # Test with both
+        test_archive_name = "dir-dot-slash-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["./data/"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
     def test_archive_directory_dependency_require_complete(self):
         """
         Test that directory dependencies are properly marked as matched when require_complete=True
