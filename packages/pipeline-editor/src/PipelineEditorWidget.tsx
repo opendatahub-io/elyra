@@ -115,8 +115,6 @@ export const commandIDs = {
   openDocManager: 'docmanager:open',
   newDocManager: 'docmanager:new-untitled',
   saveDocManager: 'docmanager:save',
-  submitScript: 'script-editor:submit',
-  submitNotebook: 'notebook:submit',
   addFileToPipeline: 'pipeline-editor:add-node',
   refreshPalette: 'pipeline-editor:refresh-palette',
   openViewer: 'code-viewer:open'

@@ -253,6 +253,92 @@ def test_add_custom_shared_memory_size(processor):
         assert execution_object["kubernetes_shared_mem_size"]["units"] == instance.units
 
 
+@pytest.mark.parametrize(
+    "metadata_dependencies",
+    [
+        {
+            "pipeline_file": Path(__file__).parent
+            / ".."
+            / "resources"
+            / "test_pipelines"
+            / "kfp"
+            / "kfp-one-node-generic-elyra-properties.pipeline",
+            "workflow_engine": WorkflowEngineType.ARGO,
+        },
+    ],
+    indirect=True,
+)
+def test_shared_memory_size_in_generated_dsl_and_compiled_yaml(
+    monkeypatch, processor: KfpPipelineProcessor, metadata_dependencies: Dict[str, Any], tmpdir
+):
+    """
+    Verify that a custom shared memory size set on a pipeline node is reflected in
+    both the generated Python DSL and the compiled YAML output (RHOAIENG-101899).
+
+    The test pipeline 'kfp-one-node-generic-elyra-properties.pipeline' has
+    kubernetes_shared_mem_size.size = 0.5 (units default to "G").
+    """
+    test_pipeline_file = metadata_dependencies["pipeline_file"]
+    pipeline = metadata_dependencies["pipeline_object"]
+    runtime_config = metadata_dependencies["runtime_config"]
+    assert runtime_config.name == pipeline.runtime_config
+
+    workflow_engine = WorkflowEngineType.get_instance_by_value(runtime_config.metadata["engine"])
+
+    # Retrieve the expected shared memory size from the operation's elyra properties
+    op = list(pipeline.operations.values())[0]
+    custom_shm = op.elyra_props.get(KUBERNETES_SHARED_MEM_SIZE)
+    assert custom_shm is not None and custom_shm.size, "Test pipeline must define a shared memory size"
+    expected_size_limit = f"{custom_shm.size}{custom_shm.units}"  # e.g. "0.5G"
+
+    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(processor, "_verify_cos_connectivity", lambda x: True)
+
+    # Generate the Python DSL
+    pipeline_instance_id = f"{pipeline.name}-{datetime.now().strftime('%m%d%H%M%S')}"
+    generated_dsl = processor._generate_pipeline_dsl(
+        pipeline=pipeline,
+        pipeline_name=pipeline.name,
+        workflow_engine=workflow_engine,
+        pipeline_version=f"{pipeline.name}-test",
+        pipeline_instance_id=pipeline_instance_id,
+        experiment_name=f"{pipeline.name}-test",
+    )
+
+    # The DSL must contain an empty_dir_mount call for /dev/shm with the correct size
+    assert "empty_dir_mount(" in generated_dsl, f"empty_dir_mount call missing from generated DSL:\n{generated_dsl}"
+    assert 'mount_path="/dev/shm"' in generated_dsl, f"mount_path /dev/shm missing:\n{generated_dsl}"
+    assert 'medium="Memory"' in generated_dsl, f"medium=Memory missing:\n{generated_dsl}"
+    assert (
+        f'size_limit="{expected_size_limit}"' in generated_dsl
+    ), f"size_limit={expected_size_limit} missing:\n{generated_dsl}"
+
+    # Compile the DSL to YAML and verify the emptyDirMounts entry is present
+    compiled_output_file = str((Path(tmpdir) / test_pipeline_file.with_suffix(".yaml").name).absolute())
+    processor._compile_pipeline_dsl(
+        dsl=generated_dsl,
+        workflow_engine=workflow_engine,
+        output_file=compiled_output_file,
+        pipeline_conf=None,
+    )
+
+    with open(compiled_output_file) as fh:
+        spec_docs = list(yaml.safe_load_all(fh.read()))
+
+    assert len(spec_docs) == 2, "Expected two YAML documents (components + platforms)"
+    executors = spec_docs[1]["platforms"]["kubernetes"]["deploymentSpec"]["executors"]
+    # There is exactly one executor for the single node in the pipeline
+    executor = next(iter(executors.values()))
+
+    assert "emptyDirMounts" in executor, f"emptyDirMounts missing from compiled YAML platforms section:\n{executor}"
+    shm_mounts = [m for m in executor["emptyDirMounts"] if m.get("mountPath") == "/dev/shm"]
+    assert len(shm_mounts) == 1, f"Expected exactly one /dev/shm emptyDirMount, got: {executor['emptyDirMounts']}"
+    shm_mount = shm_mounts[0]
+    assert shm_mount["volumeName"] == "shm"
+    assert shm_mount["medium"] == "Memory"
+    assert shm_mount["sizeLimit"] == expected_size_limit
+
+
 def test_add_kubernetes_secret(processor: KfpPipelineProcessor):
     """
     Verify that add_kubernetes_secret updates the execution object as expected

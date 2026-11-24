@@ -59,7 +59,6 @@ import {
   RuntimeImagesWidget
 } from './RuntimeImagesWidget';
 import { RuntimesWidget } from './RuntimesWidget';
-import { SubmitFileButtonExtension } from './SubmitFileButtonExtension';
 
 import '../style/index.css';
 
@@ -382,31 +381,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       .catch(async (error) => {
         await RequestErrors.serverError(error);
       });
-
-    // SubmitNotebookButtonExtension initialization code
-    const notebookButtonExtension = new SubmitFileButtonExtension();
-    app.docRegistry.addWidgetExtension('Notebook', notebookButtonExtension);
-    app.contextMenu.addItem({
-      selector: '.jp-Notebook',
-      command: commandIDs.submitNotebook,
-      rank: -0.5
-    });
-
-    // SubmitScriptButtonExtension initialization code
-    const scriptButtonExtension = new SubmitFileButtonExtension();
-    app.docRegistry.addWidgetExtension('Python Editor', scriptButtonExtension);
-    app.contextMenu.addItem({
-      selector: '.elyra-ScriptEditor',
-      command: commandIDs.submitScript,
-      rank: -0.5
-    });
-
-    app.docRegistry.addWidgetExtension('R Editor', scriptButtonExtension);
-    app.contextMenu.addItem({
-      selector: '.elyra-ScriptEditor',
-      command: commandIDs.submitScript,
-      rank: -0.5
-    });
 
     const runtimesWidget = new RuntimesWidget({
       app,
