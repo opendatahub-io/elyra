@@ -33,9 +33,9 @@ def create_project_temp_dir():
 def directory_in_list(directory, filenames):
     """Checks if any entries in the filenames list start with the given directory."""
     return any(
-        name.startswith(directory + "/")      # File dependency inside this directory
-        or directory.startswith(name + "/")   # This directory inside a dependency directory
-        or fnmatch.fnmatch(directory, name)   # Pattern match
+        name.startswith(directory + "/")  # File dependency inside this directory
+        or directory.startswith(name + "/")  # This directory inside a dependency directory
+        or fnmatch.fnmatch(directory, name)  # Pattern match
         for name in filenames
     )
 
@@ -126,7 +126,7 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
 
     # Since filenames is essentially static, convert to set immediately and normalize paths
     filenames_set = set()
-    for filename in (filenames or []):
+    for filename in filenames or []:
         # Normalize to tar format: use '/', strip leading './', strip trailing '/'
         normalized = filename.replace(os.sep, "/").lstrip("./").rstrip("/")
         filenames_set.add(normalized)
