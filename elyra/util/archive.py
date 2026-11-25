@@ -127,9 +127,14 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
     # Since filenames is essentially static, convert to set immediately and normalize paths
     filenames_set = set()
     for filename in filenames or []:
-        # Normalize to tar format: use '/', strip leading './', strip trailing '/'
-        normalized = filename.replace(os.sep, "/").lstrip("./").rstrip("/")
-        filenames_set.add(normalized)
+        # Normalize to tar format: use '/', strip leading './' prefix, strip trailing '/'
+        normalized = filename.replace(os.sep, "/")
+        if normalized.startswith("./"):
+            normalized = normalized[2:]  # Remove './' prefix (not individual chars)
+        normalized = normalized.rstrip("/")
+        # Skip dependencies that normalize to empty (e.g., '.', './', etc.)
+        if normalized:
+            filenames_set.add(normalized)
 
     # If there's a '*' - less things to check.
     include_all = len({WILDCARDS[0]} & filenames_set) > 0

@@ -331,6 +331,48 @@ class ArchiveTestCase(unittest.TestCase):
         expected_files.extend([f"sample_data/{f}" for f in self.test_files])
         self.assertArchivedContent(archive_path, expected_files)
 
+    def test_archive_dotfile_dependency(self):
+        """
+        Test that dotfiles (files starting with '.') are handled correctly.
+        Regression test for: '.env' should not be normalized to 'env'
+        """
+        # Create a dotfile
+        dotfile = os.path.join(self.test_dir, ".env")
+        with open(dotfile, "w") as f:
+            f.write("SECRET=value")
+
+        test_archive_name = "dotfile-dep-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["a.py", ".env"],
+            require_complete=True,
+        )
+
+        # Should include both the regular file and the dotfile
+        self.assertArchivedFileCount(archive_path, 2)
+        self.assertArchivedContent(archive_path, ["a.py", ".env"])
+
+    def test_archive_current_directory_dependency(self):
+        """
+        Test that '.' as a dependency is rejected (normalizes to empty string).
+        Regression test for: '.' should not cause silent failures
+        """
+        test_archive_name = "current-dir-dep-" + self.test_timestamp + ".tar.gz"
+
+        # '.' normalizes to empty string, so with require_complete=True it should raise
+        with self.assertRaises(FileNotFoundError) as context:
+            create_temp_archive(
+                archive_name=test_archive_name,
+                source_dir=self.test_dir,
+                filenames=["a.py", "."],
+                require_complete=True,
+            )
+
+        # The error should indicate that the empty string was not found
+        # (since '.' gets normalized to '')
+        self.assertIn("", str(context.exception))
+
     def assertArchivedContent(self, archive_path, expected_content):
         actual_content = []
         with tarfile.open(archive_path, "r:gz") as tar:
