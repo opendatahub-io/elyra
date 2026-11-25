@@ -31,8 +31,13 @@ def create_project_temp_dir():
 
 
 def directory_in_list(directory, filenames):
-    """Checks if any entries in the filenames list starts with the given directory."""
-    return any(name.startswith(directory + os.sep) or fnmatch.fnmatch(directory, name) for name in filenames)
+    """Checks if any entries in the filenames list start with the given directory."""
+    return any(
+        name.startswith(directory + "/")  # File dependency inside this directory
+        or directory.startswith(name + "/")  # This directory inside a dependency directory
+        or fnmatch.fnmatch(directory, name)  # Pattern match
+        for name in filenames
+    )
 
 
 def has_wildcards(filename):
@@ -67,12 +72,22 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 return tarinfo
             # only include subdirectories if enabled in common properties
             elif recursive:
+                # If this directory matches a dependency name exactly, mark it as matched
+                for filename in filenames_set:
+                    if fnmatch.fnmatch(tarinfo.name, filename):
+                        matched_set.add(filename)
+                        break
                 return tarinfo
             # We have a directory, check if any filenames start with this value and
             # allow if found - except if a single '*' is listed (i.e., include_all) in
             # which case we don't want to add this directory since recursive is False.
             # This occurs with filenames like `data/util.py` or `data/*.py`.
             elif not include_all and directory_in_list(tarinfo.name, filenames_set):
+                # If this directory matches a dependency name exactly, mark it as matched
+                for filename in filenames_set:
+                    if fnmatch.fnmatch(tarinfo.name, filename):
+                        matched_set.add(filename)
+                        break
                 return tarinfo
             return None
 
@@ -95,6 +110,11 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                 matched_set.add(filename)
                 return tarinfo
 
+            # If the dependency is a directory and this file is inside that directory, include it
+            if tarinfo.name.startswith(filename + "/"):
+                matched_set.add(filename)
+                return tarinfo
+
             # If the filename is a "flat" wildcarded value (i.e., isn't prefixed with a directory name)
             # then we should take the basename of the candidate file to perform the match against.  This
             # occurs for dependencies like *.py when include-subdirectories is enabled.
@@ -104,8 +124,17 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
                     return tarinfo
         return None
 
-    # Since filenames is essentially static, convert to set immediately and use the set
-    filenames_set = set(filenames or [])
+    # Since filenames is essentially static, convert to set immediately and normalize paths
+    filenames_set = set()
+    for filename in filenames or []:
+        # Normalize to tar format: use '/', strip leading './' prefix, strip trailing '/'
+        normalized = filename.replace(os.sep, "/")
+        if normalized.startswith("./"):
+            normalized = normalized[2:]  # Remove './' prefix (not individual chars)
+        normalized = normalized.rstrip("/")
+        # Skip dependencies that normalize to empty (e.g., '.', './', etc.)
+        if normalized:
+            filenames_set.add(normalized)
 
     # If there's a '*' - less things to check.
     include_all = len({WILDCARDS[0]} & filenames_set) > 0

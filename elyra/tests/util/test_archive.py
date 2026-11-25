@@ -168,6 +168,211 @@ class ArchiveTestCase(unittest.TestCase):
 
         self.assertArchivedFileCount(archive_path, 0)
 
+    def test_archive_directory_as_dependency(self):
+        """
+        Test that specifying a directory name as a dependency (without recursive=True)
+        includes all files within that directory
+        """
+        # Create a subdirectory with test files
+        data_dir = os.path.join(self.test_dir, "sample_data")
+        os.makedirs(data_dir)
+        self._create_test_files(data_dir)
+
+        test_archive_name = "directory-dep-" + self.test_timestamp + ".tar.gz"
+        # Specify the directory name as a dependency (NOT recursive mode)
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["sample_data"]
+        )
+
+        # Verify all files from the directory are included
+        self.assertArchivedFileCount(archive_path, 5)
+        self.assertArchivedContent(
+            archive_path,
+            [
+                "sample_data/a.py",
+                "sample_data/b.py",
+                "sample_data/c.json",
+                "sample_data/d.txt",
+                "sample_data/e.ipynb",
+            ],
+        )
+
+    def test_archive_directory_dependency_with_multiple_files(self):
+        """
+        Test directory dependency along with individual file dependencies
+        """
+        # Create a subdirectory with test files
+        utils_dir = os.path.join(self.test_dir, "utils")
+        os.makedirs(utils_dir)
+        self._create_test_files(utils_dir)
+
+        test_archive_name = "mixed-dep-" + self.test_timestamp + ".tar.gz"
+        # Mix directory and file dependencies
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["utils", "a.py"]
+        )
+
+        # Should include: a.py from root + all files from utils/
+        self.assertArchivedFileCount(archive_path, 6)
+        expected_files = ["a.py"]
+        expected_files.extend([f"utils/{f}" for f in self.test_files])
+        self.assertArchivedContent(archive_path, expected_files)
+
+    def test_archive_nested_directory_dependency(self):
+        """
+        Test that directory dependency works for nested directories
+        """
+        # Create nested directory structure
+        parent_dir = os.path.join(self.test_dir, "parent")
+        child_dir = os.path.join(parent_dir, "child")
+        os.makedirs(child_dir)
+
+        # Add files to child directory
+        for test_file in ["config.json", "data.csv"]:
+            file_path = os.path.join(child_dir, test_file)
+            with open(file_path, "w") as f:
+                f.write("test content")
+
+        test_archive_name = "nested-dir-dep-" + self.test_timestamp + ".tar.gz"
+        # Specify nested directory as dependency
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["parent/child"]
+        )
+
+        # Should include files from parent/child/
+        self.assertArchivedFileCount(archive_path, 2)
+        self.assertArchivedContent(archive_path, ["parent/child/config.json", "parent/child/data.csv"])
+
+    def test_archive_parent_with_deep_descendants(self):
+        """
+        Test that selecting a parent directory includes deeply nested descendants.
+        Regression test for: selecting 'data' should include 'data/nested/deep.txt'
+        """
+        # Create nested directory structure: data/nested/deep.txt
+        parent_dir = os.path.join(self.test_dir, "data")
+        nested_dir = os.path.join(parent_dir, "nested")
+        os.makedirs(nested_dir)
+
+        # Add files at multiple levels
+        parent_file = os.path.join(parent_dir, "top.txt")
+        nested_file = os.path.join(nested_dir, "deep.txt")
+        with open(parent_file, "w") as f:
+            f.write("parent level")
+        with open(nested_file, "w") as f:
+            f.write("nested level")
+
+        test_archive_name = "parent-deep-descendants-" + self.test_timestamp + ".tar.gz"
+        # Select the parent directory - should include all descendants
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["data"], require_complete=True
+        )
+
+        # Should include both parent-level and deeply nested files
+        self.assertArchivedFileCount(archive_path, 2)
+        self.assertArchivedContent(archive_path, ["data/top.txt", "data/nested/deep.txt"])
+
+    def test_archive_directory_spelling_variations(self):
+        """
+        Test that different directory path spellings all work correctly.
+        Regression test for: 'data/', './data', and 'data' should all match the same directory
+        """
+        # Create a test directory with files
+        data_dir = os.path.join(self.test_dir, "data")
+        os.makedirs(data_dir)
+        test_file = os.path.join(data_dir, "file.txt")
+        with open(test_file, "w") as f:
+            f.write("test content")
+
+        # Test with trailing slash
+        test_archive_name = "dir-trailing-slash-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["data/"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
+        # Test with leading ./
+        test_archive_name = "dir-leading-dot-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["./data"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
+        # Test with both
+        test_archive_name = "dir-dot-slash-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["./data/"], require_complete=True
+        )
+        self.assertArchivedFileCount(archive_path, 1)
+        self.assertArchivedContent(archive_path, ["data/file.txt"])
+
+    def test_archive_directory_dependency_require_complete(self):
+        """
+        Test that directory dependencies are properly marked as matched when require_complete=True
+        """
+        # Create a subdirectory with test files
+        data_dir = os.path.join(self.test_dir, "sample_data")
+        os.makedirs(data_dir)
+        self._create_test_files(data_dir)
+
+        test_archive_name = "dir-require-complete-" + self.test_timestamp + ".tar.gz"
+        # Should not raise FileNotFoundError - directory dependency should be marked as matched
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["a.py", "sample_data"],
+            require_complete=True,
+        )
+
+        # Verify archive contains the individual file + all files from directory
+        self.assertArchivedFileCount(archive_path, 6)
+        expected_files = ["a.py"]
+        expected_files.extend([f"sample_data/{f}" for f in self.test_files])
+        self.assertArchivedContent(archive_path, expected_files)
+
+    def test_archive_dotfile_dependency(self):
+        """
+        Test that dotfiles (files starting with '.') are handled correctly.
+        Regression test for: '.env' should not be normalized to 'env'
+        """
+        # Create a dotfile
+        dotfile = os.path.join(self.test_dir, ".env")
+        with open(dotfile, "w") as f:
+            f.write("SECRET=value")
+
+        test_archive_name = "dotfile-dep-" + self.test_timestamp + ".tar.gz"
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["a.py", ".env"],
+            require_complete=True,
+        )
+
+        # Should include both the regular file and the dotfile
+        self.assertArchivedFileCount(archive_path, 2)
+        self.assertArchivedContent(archive_path, ["a.py", ".env"])
+
+    def test_archive_current_directory_dependency(self):
+        """
+        Test that '.' as a dependency is rejected (normalizes to empty string).
+        Regression test for: '.' should not cause silent failures
+        """
+        test_archive_name = "current-dir-dep-" + self.test_timestamp + ".tar.gz"
+
+        # '.' normalizes to empty string, so with require_complete=True it should raise
+        with self.assertRaises(FileNotFoundError) as context:
+            create_temp_archive(
+                archive_name=test_archive_name,
+                source_dir=self.test_dir,
+                filenames=["a.py", "."],
+                require_complete=True,
+            )
+
+        # The error should indicate that the empty string was not found
+        # (since '.' gets normalized to '')
+        self.assertIn("", str(context.exception))
+
     def assertArchivedContent(self, archive_path, expected_content):
         actual_content = []
         with tarfile.open(archive_path, "r:gz") as tar:
