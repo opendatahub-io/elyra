@@ -106,7 +106,6 @@ gitlab = [
 # The following is a collection of "non-test" extra dependencies from above.
 all = [
     "elyra-examples-kfp-catalog",
-    "python-gitlab",
 ]
 
 # Console scripts
